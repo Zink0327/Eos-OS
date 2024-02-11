@@ -1,0 +1,153 @@
+Fat 12 File System
+
+The FAT12 is the file system on a floppy disk. The number “12” is derived from the fact that the FAT consists of 12-bit entries. The storage space on a floppy disk is divided into units called sectors. In larger storage devices, a bunch of sectors form a cluster. However, for the floppy disk, the number of sectors in a cluster is one. Also, the size of a sector (and hence a cluster) is 512 bytes for a floppy disk.
+
+It can manage a maximum size of 16 megabytes because it uses 12 bits to address the clusters.
+
+1. Disk Organization
+
+A floppy disk layout (FAT-12) consists of four major sections: the boot sector,FAT tables,root 
+directory,and data area:
+
+Offset           Content
+(sector) ________________________
+     0  |      Boot sector       |
+        |________________________|
+        |                        |
+     1  |         FAT 1          |
+        |________________________|
+        |                        |
+    10  |         FAT 2          |
+        |________________________|
+        |                        |
+    19  |        Root DIR        |
+        |________________________|
+        |                        |
+    33  |       Data Area        |
+        |                        |
+        \/\/\/\/\/\/\/\/\/\/\/\/\/
+                 ......
+        \/\/\/\/\/\/\/\/\/\/\/\/\/
+  2879  |    (End of Data Area)  |
+        |________________________|
+
+   Figure 1 Disk organization of the FAT12 file system
+
+The boot sector consists of the first sector (sector 0) on the volume or disk. The boot sector contains specific information about the rest of organization of the file system, including how many copies of the FAT tables are present, how big a sector is, how many sectors in a cluster, etc.
+
+FAT tables contain pointers to every cluster on the disk, and indicate the number of the next cluster in the current cluster chain, the end of the cluster chain, whether a cluster is empty, or has errors. The FAT tables are the only method of finding the location of files and directories on the rest of the disk. There are typically two redundant copies of the FAT table on disk for data security and recovery purposes. On a floppy, since a cluster consists of just one sector, there is a FAT entry pointer to every sector on the disk.
+
+The root directory is the primary directory of the disk. Unlike other directories located in the data area of the disk, the root directory has a finite size (For FAT12, 14 sectors * 16 directory entries per sector = 224 possible entries), restricting the total amount of files or directories that can be created there in Data Area. 
+
+The first sector or cluster of the data area corresponds to cluster 2 of the file system (the first cluster is always cluster 2). The data area contains file and directory data and spans the remaining sectors on the disk. 
+
+2. The Boot Sector
+The boot sector exists at sector 0 on the disk and contains the basic disk geometry, which is the set of information needed by the operating system to use the disk correctly. Whenever the disk is used, the information from the boot sector is read and any needed information is extracted from it. The boot sector on a DOS formatted floppy is a sequence of bytes that looks as follows (or BPB data):
+
+Offset           Content               Description (Case in 1.44M floppy disk)
+(Bytes)  ________________________
+  0x00  |   JMP _start & NOP     |     A jump code
+        |________________________|
+        |                        |
+  0x04  |        OEMName         |     OEM name(must be 8 byte)
+        |________________________|
+        |                        |
+  0x0B  |      BytesPerSector    |     How many bytes on each sector(must be 512)
+        |________________________|
+        |                        |
+  0x0D  |    SectorPerCluster    |     The size of the cluster(must be 1)
+        |________________________|
+        |                        |
+  0x0E  |     ReservedSector     |     The number of reserved sector(1 normally)
+        |                        |
+        |________________________|
+        |                        |
+  0x10  |       FATNumber        |     The number of FAT(must be 2)
+        |                        |
+        |________________________|
+        |                        |
+  0x11  |       RootEntCnt       |     How many menu can root directory contain(224 normally)
+        |                        |
+        |________________________|
+        |                        |
+  0x13  |      SectorNum16       |     How many sectors in the disk(must be 2880)
+        |                        |
+        |________________________|
+        |                        |
+  0x15  |         Media          |     The type of the disk(must be 0xf0)
+        |                        |
+        |________________________|
+        |                        |
+  0x16  |        FATSize         |     The number of FAT(must be 2)
+        |                        |
+        |________________________|
+        |                        |
+  0x18  |     SectorPerTrack     |     How many sectors per track(must be 18)
+        |                        |
+        |________________________|
+        |                        |
+  0x1A  |     NumberOfHeads      |     The number of the heads(must be 2)
+        |                        |
+        |________________________|
+        |                        |
+  0x1C  |      HiddenSector      |     The number of hidden sector(must be 0)
+        |                        |
+        |________________________|
+        |                        |
+  0x20  |      SectorNum32       |     If SectorNum16 is 0, this will be the number of sectors ( for FAT-32 only)
+        |                        |
+        |________________________|
+        |                        |
+  0x24  |       DriveNumber      |     The drive number of int 13h
+        |                        |
+        |________________________|
+        |                        |
+  0x25  |        Reserved1       |     Unused
+        |                        |
+        |________________________|
+        |                        |
+  0x26  |        BootSign        |     Extended bootstrap sign
+        |                        |
+        |________________________|
+        |                        |
+  0x27  |        VolumeID        |     Volume ID
+        |                        |
+        |________________________|
+        |                        |
+  0x2B  |       VolumeLabel      |     Volume Label. The setting for this field when there is no volume label is the string “NO NAME ”. (must be 11 byte)
+        |                        |
+        |________________________|
+        |                        |
+  0x36  |       FileSystem       |     The file system(must be 8 byte)
+        |                        |
+        |________________________|
+        |                        |
+  0x3E  |          MBR           |
+        \/\/\/\/\/\/\/\/\/\/\/\/\/         
+		               ......
+
+    Figure 2 BPB data of the FAT12 file system
+
+
+3. FAT (File Allocation Table)
+
+The FAT, as stated earlier, is a data structure that maps the data sectors of the storage device. It is similar to an array and each entry in the FAT corresponds to a cluster of data on the disk. 
+
+The values in each entry of the FAT that are of interest are:
+|-> A value signifying that this data cluster is the last cluster of a file
+|-> A value signifying that this data cluster is currently unused
+--> A value signifying where the NEXT data cluster of the current file is located.
+
+Specifically, the FAT entry values signify the following:
+   ___________________________________________________________
+  |  Value          | Meaning                                 |
+  |-----------------|-----------------------------------------|
+  |  0x00           | Unused                                  |
+  |  0xFF0-0xFF6    | Reserved cluster                        |
+  |  0xFF7          | Bad cluster                             |
+  |  0xFF8-0xFFF    | Last cluster in a file                  |
+  | (anything else) | Number of the next cluster in the file  |
+  |_________________|_________________________________________|
+
+    Figure 3 value in FAT
+	

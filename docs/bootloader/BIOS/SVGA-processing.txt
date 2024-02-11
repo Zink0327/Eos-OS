@@ -1,0 +1,192 @@
+INT 10H 4f00H - Query SuperVGA Support
+
+Inputs: 
+AX 4f00H 
+ES:DI Addr of buffer to receive an Svga Info Record
+
+------------------Table 1: Svga Info Record---------------------
+_____________________________________________________________________________________________________
+|Offset | Size |    Description                                                                      |
+|_______|______|_____________________________________________________________________________________|
+| 00h   | DWORD|      Signature ('VESA'). For VBE 2.0 this field must be set to
+|       |      |         "VBE2" before the call to fill in the version 2.0 fields
+|_______|______|_____________________________________________________________________________________|
+| 04h   | WORD |      VESA version number
+|_______|______|_____________________________________________________________________________________|
+| 06h   | DWORD|       Pointer to OEM name
+|_______|______|_____________________________________________________________________________________|
+| 0Ah   | DWORD|       Capabilities.
+|       |      |         Bit  0  Set if the DAC can switch width, clear if it is fixed 
+|       |      |                 6 bits per primary color
+|       |      |              1  (VBE2) non-VGA controller
+|       |      |              2  (VBE2) Programmed DAC with blank bit
+|_______|______|_____________________________________________________________________________________|
+| 0Eh   | DWORD|       Pointer to list of supported VESA and OEM video modes
+|       |      |        Terminated with 0FFFFh.
+|_______|______|_____________________________________________________________________________________|
+| 12h   | WORD |       Video memory in 64k blocks
+|_______|______|_____________________________________________________________________________________|
+| 14h   | WORD |     OEM software version                 *VBE v2.0*
+|_______|______|_____________________________________________________________________________________|
+| 16h   | DWORD|     Pointer to vendor name               *VBE v2.0*
+|_______|______|_____________________________________________________________________________________|
+| 1Ah   | DWORD|     Pointer to product name              *VBE v2.0*
+|_______|______|_____________________________________________________________________________________|
+| 1Eh   | DWORD|     Pointer to product revision string   *VBE v2.0*
+|_______|______|_____________________________________________________________________________________|
+|100h   | 256B |  OEM scratchpad
+|       |      |   The buffer is defined as 256 bytes for version 1.0 & 1.2, 262 bytes for version 1.1
+|       |      |   and 512 bytes for version 2.0. 
+|_______|______|_____________________________________________________________________________________|
+Note: Some VESA drivers have been known to write beyond the end of the official buffer.
+---------------------------------------
+
+Returns: 
+AX VESA status: 
+    |-> AH=0 means successful (else failed) 
+    --> AL=4fH means this function is supported 
+
+ES:DI buffer contains returned data (if succeeded) 
+
+Info: This function is used to see if VESA support is present and to learn which extended video modes it supports.
+
+!!! The buffer at ES:DI must be at least 256 bytes long; see Svga Info Rec(table above) for a layout of the returned information.  This VESA BIOS may place the list of supported modes into your buffer, anywhere after offset 12H.
+
+INT 10H 4f01H - Query SuperVGA Mode Information
+
+Inputs: 
+AX 4f01H 
+CX VESA/SVGA Video Mode number (may also be std modes 00-13H) 
+ES:DI Addr of buffer to receive an Svga Mode Info Record
+
+
+------------------Table 2: Svga Mode Info Record---------------------
+Offset           Content               Description 
+(Bytes)  ________________________
+  0x00  |    pModeAttributes     |     mode attributes
+        |   __________________________
+        |   |   Offset(Bit)          |   Description (if set)
+        |   |     0                  |   mode supported by present hardware configuration
+        |   |     1                  |   optional information available (must be =1 for VBE v1.2+)
+        |   |     2                  |   BIOS output supported
+        |   |     3                  |   set if color, clear if monochrome
+        |   |     4                  |   set if graphics mode, clear if text mode
+        |   |--------VBE v2.0+ ------|
+        |   |     5                  |   mode is not VGA-compatible
+        |   |     6                  |  bank-switched mode not supported
+        |   |     7                  |  linear framebuffer mode supported
+        |   |     8                  |  double-scan mode available (e.g. 320x200 and 320x240)
+        |   |--------VBE v3.0 -------|
+        |   |     9                  |  interlaced mode available / application must call EnableDirectAccess before calling bank-switching functions(for VBE/AF v1.0P)
+        |   |     10                 |  hardware supports triple buffering
+        |   |     11                 |  hardware supports stereoscopic display
+        |   |     12                 |  dual display start address support
+        |   |     13-15              |  reserved
+        |   |________________________|
+        |________________________|
+  0x02  |  FirstWindowAttributes |     window attributes, window A
+        |   __________________________
+        |   |     Offset(Bit)        |  Description (if set)
+        |   |     0                  |   exists
+        |   |     1                  |   readable
+        |   |     2                  |   writable
+        |   |     3-7                |   reserved
+        |   |________________________|
+        |________________________|
+  0x03  | SecondWindowAttributes |     window attributes, window B
+        |________________________|
+  0x04  |   WindowGranularity    |     window granularity in KB
+        |________________________|
+  0x06  |       WindowSize       |     window size in KB
+        |________________________|
+  0x08  |   FirstWindowSegment   |     start segment of window A (0000h if not supported)
+        |________________________|
+  0x0A  |   SecondWindowSegment  |     start segment of window B (0000h if not supported)
+        |________________________|
+  0x0C  |    WindowFunctionPtr   |     pointer to FAR window positioning function (equivalent to AX=4F05h)
+        |________________________|
+  0x10  |    BytesPerScanLine    |     bytes per scan line
+        |________________________|
+-----------Added in Revision 1.2-----------
+        |                        |
+  0x12  |          Width         |     width in pixels (graphics) or characters (text)
+        |________________________|
+  0x14  |         Height         |     height in pixels (graphics) or characters (text)
+        |________________________|
+  0x16  |        CharWidth       |     width of character cell in pixels
+        |________________________|
+  0x17  |        CharHeight      |     height of character cell in pixels
+        |________________________|
+  0x18  |       PlanesCount      |     number of memory planes
+        |________________________|
+  0x19  |       BitsPerPixel     |     number of bits per pixel
+        |________________________|
+  0x1A  |        BanksCount      |     number of banks
+        |________________________|
+  0x1B  |       MemoryModel      |     memory model type
+        |.........      (Values for SVGA memory model type:
+                        00h    text
+                        01h    CGA graphics
+                        02h    HGC graphics
+                        03h    16-color (EGA) graphics
+                        04h    packed pixel graphics
+                        05h    "sequ 256" (non-chain 4) graphics
+                        06h    direct color (HiColor, 24-bit color)
+                        07h    YUV (luminance-chrominance, also called YIQ)
+                        08h-0Fh reserved for VESA
+        |..........     10h-FFh OEM memory models
+        |________________________|
+  0x1C  |         BankSize       |     size of bank in KB
+        |________________________|
+  0x1D  |      ImagePagesCount   |     number of image pages (less one) that will fit in video RAM
+        |________________________|
+  0x1E  |         Reserved1      |     reserved (00h for VBE 1.0-2.0, 01h for VBE 3.0)
+        |________________________|
+-----------some 'useless' data-----------
+  0x1F  |       RedMaskSize      |     
+        |________________________|
+  0x20  |     RedFieldPosition   |      
+        |________________________|
+  0x21  |      GreenMaskSize     |     
+        |________________________|
+  0x22  |   GreenFieldPosition   |     
+        |________________________|
+  0x23  |      BlueMaskSize      |     
+        |________________________|
+  0x24  |    BlueFieldPosition   |    
+        |________________________|
+  0x25  |    ReservedMaskSize    |  
+        |________________________|
+  0x26  |  ReservedMaskPosition  |     
+        |________________________|
+  0x27  |   DirectColorModeInfo  |    
+        |   __________________________
+        |   |     Offset(Bit)        |  Description (if set)
+        |   |     0                  |   Color ramp is programmable
+        |   |     1                  |   Bytes in reserved field may be used by application
+        |   |________________________|
+        |________________________|
+-----------Added in Revision 2.0-----------
+  0x28  |        LFBAddress      |     physical address of linear video buffer (write here to show your images~)
+        |________________________|
+  0x2C  |  OffscreenMemoryOffset |     pointer to start of offscreen memory
+        |________________________|
+  0x30  |   OffscreenMemorySize  |     KB of offscreen memory
+        |________________________|
+  0x32  |        Reserved2       |     available in VBE 3, but useless now...
+        |                        |
+        |                        |
+        |________________________|
+  0x100 |      **Next item**     |
+        /\/\/\/\/\/\/\/\/\/\/\/\/\
+                  ......
+
+Returns: 
+AX VESA status: 
+    |-> AH=0 means successful (else failed) 
+    --> AL=4fH means this function is supported 
+
+ES:DI buffer contains returned data (if succeeded)
+
+Info: Obtains information about the capabilities, resolution, memory access model, etc. for a particular SuperVGA video mode. The buffer at ES:DI must be 256 bytes long (though only the first 48 bytes are used here). See SvgaModeInfoRec for a layout of the returned information. Notes:  VESA implementations may not return the entire data structure. Be sure to check bit 0(offset) of the byte at offset 0. 
+
