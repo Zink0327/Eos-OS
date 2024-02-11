@@ -32,17 +32,20 @@ if exist %~dp0..\..\tools\nasm\nasm.exe (
 %~dp0..\..\tools\nasm\nasm.exe %~dp0\mbr.asm -o %~dp0..\..\build\mbr.bin -l %~dp0..\..\build\mbr.lst
 echo %~dp0..\..\tools\nasm\nasm.exe %~dp0\mbr.asm -o %~dp0..\..\build\mbr.bin -l %~dp0..\..\build\mbr.lst
 if not exist %~dp0..\..\build\mbr.bin (
+set ERRFLAG="1"
 echo compile error!
 goto end
 )
 echo %~dp0..\..\tools\nasm\nasm.exe %~dp0\loader.asm -i %~dp0 -o %~dp0..\..\build\loader.bin -l %~dp0..\..\build\loader.lst
 %~dp0..\..\tools\nasm\nasm.exe %~dp0\loader.asm -i %~dp0 -o %~dp0..\..\build\loader.bin -l %~dp0..\..\build\loader.lst
 if not exist %~dp0..\..\build\loader.bin (
+set ERRFLAG="1"
 echo compile error!
 goto end
 )
 ) else (
-echo ERROR: ..\..\tools\nasm\nasm.exe not found!
+set ERRFLAG="1"
+echo FATAL ERROR: ..\..\tools\nasm\nasm.exe not found!
 )
 goto end
 

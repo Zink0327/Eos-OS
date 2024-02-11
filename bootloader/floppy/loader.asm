@@ -1,4 +1,4 @@
-;----------Omega loader for BIOS----------
+﻿;----------Omega loader for BIOS----------
 ;    File name:loader.asm
 ;
 ;    Copyright (C) 2023 by Zink
@@ -90,6 +90,12 @@ OffsetTmpOfKernel equ 0x7E00
 BaseOfFATBuf EQU 0x6c00
 BaseOfRootDirBuf EQU 5c00H
 MemoryStructBufferAddr equ 0x7E00
+
+SVGAModWidthB equ 1024
+SVGAModHeightB equ 768
+SVGAModWidth equ 1920
+SVGAModHeight equ 1080
+SVGAModBpp equ 24
  
 RootDirSectors		equ	14     ;How many sectors root directory takes. It can be counted by the following formula (RootEntCnt * 32 + BytesPerSector - 1) / BytesPerSector = RootDirSectors
 RootDirStartSector	equ	19   ;ReservedSector + FATSize * FATNumber
@@ -105,7 +111,7 @@ DESC_DATA32: dd 0x0000FFFF,0x00CF9200    ;data segment
 
 GdtLen equ $ - GDT
 GdtPtr dw GdtLen - 1
-       dd GDT ;be careful about the address(after use org)!!!!!!
+       dd GDT ;be careful about the address(after using org)!!!!!!
 
 SelectorCode32 equ DESC_CODE32 - GDT
 SelectorData32 equ DESC_DATA32 - GDT
@@ -132,7 +138,7 @@ MOV AX,CS
 MOV DS,AX
 MOV ES,AX
 MOV SS,AX
-;because loader is a part of kernel, so it should use absolute address
+;because loader is a part of kernel, it should use absolute address
 MOV SP,0x00
 
 MOV AX,0B800h
@@ -151,7 +157,7 @@ IN AL,92h
 OR AL,00000010b
 OUT 92H,AL
 
-;due to that there isn't an IDT there, disable interrupt first
+;since there isn't an IDT there, disable interrupt first
 CLI
 
 ;create GDT
@@ -284,7 +290,7 @@ MOV BYTE [FS:EDI],AL
 
 INC ESI
 INC EDI
-;loop while cx==0
+;loop until cx=0
 LOOP movekernel
 
 MOV AX,0x1000
@@ -325,21 +331,26 @@ OUT DX,AL
 POP DX
 
 ;get memory address size type
+;**  Check docs/bootloader/QuerySystemAddressMap.txt for more detailed info.  **
 
 MOV SI,GetMemStrMsg
 CALL printstr
 CALL newline
 
-MOV EBX,0
+MOV EBX,0 
 MOV AX,00h
 MOV ES,AX
 MOV DI,MemoryStructBufferAddr
 
-getmemstruct:
-MOV EAX,0x0E820
-MOV ECX,20
-MOV EDX,0x534D4150
+
+getmemstruct:     
+
+MOV EAX,0x0E820      
+MOV ECX,20           
+MOV EDX,0x534D4150     ;‘SMAP’
+
 INT 15H
+
 JC getmemerr
 ADD DI,20
 INC DWORD [MemStructNumber]
@@ -359,25 +370,25 @@ CALL printstr
 CALL newline
 
 ;get SVGA information
+;** See docs/bootloader/SVGA-processing.txt for more detailed info. **
 
 MOV SI,Getsvgamsg
 CALL printstr
 CALL newline
-MOV AX,	1301H
-MOV	BX,	000FH
-MOV	DX,	0800H		;ROW 8
-MOV	CX,	23
+
+;MOV	CX,	23
 
 
 MOV AX,00H
 MOV ES,AX
-MOV DI,0x8000
-MOV AX,4F00H
+MOV DI,0x8000       
+MOV AX,4F00H        ;video memory size
 
 INT 10H
 
-CMP AX,004Fh
+CMP AX,004Fh     
 JZ getsvgaok
+
 
 Getsvgafail:
 MOV SI,Floppyerror
@@ -395,10 +406,10 @@ CALL newline
 MOV SI,Getsvgamodmsg
 CALL printstr
 CALL newline
-MOV	AX,	1301H
+
 MOV	BX,	000FH
 MOV	DX,	0C00H		;ROW 12
-MOV	CX,	24
+
 MOV AX,00H
 MOV ES,AX
 MOV SI,800Eh
@@ -407,7 +418,8 @@ MOV ESI,DWORD [ES:SI]
 MOV EDI,8200h
 
 getsvgamodinfo:
-MOV CX,WORD [ES:ESI]
+MOV CX,WORD [ES:ESI]   ; get the first value of SVGA mode
+PUSH CX
 
 ;display SVGA mode
 PUSH AX
@@ -419,6 +431,7 @@ MOV AL,CL
 CALL displayal
 POP AX
 
+POP CX
 CMP CX,0FFFFH
 JZ getsvgamodfinished
 
@@ -427,8 +440,43 @@ INT 10H
 CMP AX,004FH
 JNZ getsvgamodfailed
 INC DWORD [SVGAModeCounter]
+
+;select the video mode
+PUSH AX
+MOV AX,WORD [ES:EDI]
+AND AX,90H   ;Check if this is a graphics mode with linear frame buffer support
+CMP AX,90H
+JNZ finished
+
+MOV AX,WORD [ES:EDI + 12H]
+CMP AX,SVGAModWidth
+JNZ continue
+MOV AX,WORD [ES:EDI + 14H]
+CMP AX,SVGAModHeight
+JNZ continue
+MOV AX,WORD [ES:EDI + 19H]
+CMP AX,SVGAModBpp
+JNZ continue
+MOV WORD [BestSVGAModeNo],CX
+JMP getsvgamodfinished
+
+continue:
+MOV AX,WORD [ES:EDI + 12H]
+CMP AX,SVGAModWidthB
+JNZ finished
+MOV AX,WORD [ES:EDI + 14H]
+CMP AX,SVGAModHeightB
+JNZ finished
+MOV AX,WORD [ES:EDI + 19H]
+CMP AX,SVGAModBpp
+JNZ finished
+MOV WORD [BestSVGAModeNo],CX
+finished:
+POP AX
+
 ADD ESI,2
 ADD EDI,0x100
+JMP getsvgamodinfo
 
 getsvgamodfailed:
 MOV SI,Floppyerror
@@ -439,7 +487,7 @@ setvbefailed:
 JMP die
 
 die:
-HLT 
+HLT         ; let the CPU "rest in peace"
 JMP die
 
 getsvgamodfinished:
@@ -450,9 +498,13 @@ CALL newline
 ;set the SVGA mode(VESA VBE)
 
 MOV AX,4F02h
-MOV BX,4180h	;mode : 0x180 or 0x142
+MOV BX,WORD [BestSVGAModeNo]	; BX -> VESA/SVGA Video Mode number (may also be std modes 00-13H)
+                ;(bit 15 set = don't clear video memory on mode set)
+				;mode : 0x180 or 0x142
+ADD BX,4000H
 INT 10H
-CMP AX,004Fh
+CMP AX,004Fh  ;AH=0 means successful (else failed)
+              ;AL=4fH means function supported
 JNZ setvbefailed
 
 ;enter protect mode
@@ -466,6 +518,9 @@ OR EAX,1
 MOV CR0,EAX
 
 ;jump to protect mode
+MOV SI,Jumptoprmodemsg
+CALL printstr
+CALL newline
 JMP DWORD SelectorCode32:gototmpprot
 
 [SECTION .s32]
@@ -528,7 +583,7 @@ BTS EAX,0
 BTS EAX,31
 MOV CR0,EAX
 
-;enter long mode and kernel
+;enter long mode and jump to kernel
 JMP SelectorCode64:OffsetOfKernel
 
 
@@ -547,7 +602,8 @@ MOVZX EAX,AL
 RET
 
 notsupported:
-JMP $
+HLT
+JMP notsupported
 
 [SECTION .s116]
 [BITS 16]
@@ -718,7 +774,7 @@ getfatentry:
 	mov	ax,	0   ;use absolute address
 	mov	es,	ax
 	pop	ax
-;1 2 3 4 5 6 7 8  1 2 3 4 5 6 7 8  1 2 3 4 5 6 7 8
+;1 2 3 4 5 6 7 8  1 2 3 4|5 6 7 8  1 2 3 4 5 6 7 8
 ;(    first FAT data    )|(    second FAT data   )
 ;test if the fat data is in the lasr 12 bit
 	mov	byte	[Odd],	0
@@ -807,6 +863,7 @@ KernelOK DB 'Kernel moved!','$'
 GetMemStrMsg DB 'Getting memory struct...','$'
 Getsvgamsg DB 'Getting SVGA information...','$'
 Getsvgamodmsg DB 'Getting SVGA mode info...','$'
+Jumptoprmodemsg DB 'Jumping to Protect mode','$'
 ;tmp variable
 RootDirSizeForLoop	dw	RootDirSectors
 SectorNo		dw	0
@@ -816,6 +873,7 @@ OffsetOfKernelFileCount dd OffsetOfKernel
 
 MemStructNumber DD 0
 SVGAModeCounter DD 0
+BestSVGAModeNo  DW 0
 DisplayPosition DD 0
 
 

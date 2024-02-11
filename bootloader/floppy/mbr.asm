@@ -88,27 +88,30 @@ SectorBalance		equ	17   ;To balance the differences between the data cluster and
  
 JMP start
 NOP
-;BPB data
-OEMName           db 'Eos'  ;OEM name(must be 8 byte)
-BytesPerSector    dw 512         ;How many bytes on each sector(must be 512)
-SectorPerCluster  db 1           ;The size of the cluster(must be 1)
-ReservedSector    dw 1           ;the number of reserved sector(1 normally)
-FATNumber         db 2           ;The number of FAT(must be 2)
-RootEntCnt        dw 224         ;How many menu can root directory contain(224 normally)
-SectorNum16       dw 2880        ;How many sectors in the disk(must be 2880)
-Media             db 0xf0        ;The type of the disk(must be 0xf0)
-FATSize           dw 9           ;The size of FAT(must be 9)
-SectorPerTrack    dw 18          ;How many sectors on a track(must be 18)
-NumberOfHeads     dw 2           ;The number of the heads(must be 2)
-HiddenSector      dd 0           ;The number of hidden sector(must be 0)
-SectorNum32       dd 0           ;If SectorNum16 is 0, this will be the number of sectors
-DriveNumber       db 0           ;The drive number of int 13h
-Reserved1         db 0           ;unused
-BootSign          db 29h         ;Extended bootstrap sign
-VolumeID          dd 0           ;volume id
-VolumeLabel       db 'Eos 1.0   ';Volume Label(must be 11 byte)
-FileSystem        db 'FAT12   '  ;The file system(must be 8 byte)
+
+;BPB data. See docs/bootloader/Fat12.txt for more detailed information.
+
+OEMName           db 'Eos OS  '  
+BytesPerSector    dw 512       
+SectorPerCluster  db 1           
+ReservedSector    dw 1           
+FATNumber         db 2           
+RootEntCnt        dw 224       
+SectorNum16       dw 2880        
+Media             db 0xf0       
+FATSize           dw 9           
+SectorPerTrack    dw 18          
+NumberOfHeads     dw 2           
+HiddenSector      dd 0           
+SectorNum32       dd 0           
+DriveNumber       db 0           
+Reserved1         db 0           
+BootSign          db 29h         
+VolumeID          dd 0           
+VolumeLabel       db 'Eos 1.0    '
+FileSystem        db 'FAT12   '  
 ;========================
+
 start:
 ;init registers first
 MOV AX,CS
