@@ -2,14 +2,14 @@
 ;    File name:loader.asm
 ;
 ;    Copyright (C) 2023 by Zink
-;    This file is part of Eos
+;    This file is part of EOS
 ;
-;    Eos is free software: you can redistribute it and/or modify
+;    EOS is free software: you can redistribute it and/or modify
 ;    it under the terms of the GNU General Public License as published by
 ;    the Free Software Foundation, either version 3 of the License, or
 ;    (at your option) any later version.
 ;
-;    Eos is distributed in the hope that it will be useful,
+;    EOS is distributed in the hope that it will be useful,
 ;    but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;    GNU General Public License for more details.
@@ -20,7 +20,7 @@
 
 
 ;
-;Eos Main structure:
+;EOS Main structure:
 ;
 ;|----------------------|
 ;|	100000 ~ END	|
@@ -74,7 +74,7 @@
 
 ORG 0x10000
  
-JMP start
+JMP start    ;2 bytes
 
 %include "./loader.inc"
 
@@ -91,11 +91,9 @@ BaseOfFATBuf EQU 0x6c00
 BaseOfRootDirBuf EQU 5c00H
 MemoryStructBufferAddr equ 0x7E00
 
-SVGAModWidthB equ 1024
-SVGAModHeightB equ 768
-SVGAModWidth equ 1920
-SVGAModHeight equ 1080
-SVGAModBpp equ 24
+SVGAModInfoBufAddr equ 0x8200
+
+
  
 RootDirSectors		equ	14     ;How many sectors root directory takes. It can be counted by the following formula (RootEntCnt * 32 + BytesPerSector - 1) / BytesPerSector = RootDirSectors
 RootDirStartSector	equ	19   ;ReservedSector + FATSize * FATNumber
@@ -415,7 +413,7 @@ MOV ES,AX
 MOV SI,800Eh
 
 MOV ESI,DWORD [ES:SI]
-MOV EDI,8200h
+MOV EDI,SVGAModInfoBufAddr
 
 getsvgamodinfo:
 MOV CX,WORD [ES:ESI]   ; get the first value of SVGA mode
@@ -449,33 +447,34 @@ CMP AX,90H
 JNZ finished
 
 MOV AX,WORD [ES:EDI + 12H]
-CMP AX,SVGAModWidth
+CMP AX,[SVGAModWidth]
 JNZ continue
 MOV AX,WORD [ES:EDI + 14H]
-CMP AX,SVGAModHeight
+CMP AX,[SVGAModHeight]
 JNZ continue
 MOV AX,WORD [ES:EDI + 19H]
-CMP AX,SVGAModBpp
+CMP AX,[SVGAModBpp]
 JNZ continue
 MOV WORD [BestSVGAModeNo],CX
 JMP getsvgamodfinished
 
 continue:
 MOV AX,WORD [ES:EDI + 12H]
-CMP AX,SVGAModWidthB
+CMP AX,[SVGAModWidthB]
 JNZ finished
 MOV AX,WORD [ES:EDI + 14H]
-CMP AX,SVGAModHeightB
+CMP AX,[SVGAModHeightB]
 JNZ finished
 MOV AX,WORD [ES:EDI + 19H]
-CMP AX,SVGAModBpp
+CMP AX,[SVGAModBpp]
 JNZ finished
 MOV WORD [BestSVGAModeNo],CX
+
 finished:
 POP AX
 
 ADD ESI,2
-ADD EDI,0x100
+;ADD EDI,100H   ;if the mode is not correct, rewrite this buffer.
 JMP getsvgamodinfo
 
 getsvgamodfailed:
@@ -491,6 +490,16 @@ HLT         ; let the CPU "rest in peace"
 JMP die
 
 getsvgamodfinished:
+CMP WORD [BestSVGAModeNo],0  ;if this value is 0,
+JZ getsvgamodfailed          ;that means no svga mode matches. 
+
+;Rewrite the buffer 0x8200
+MOV CX,WORD [BestSVGAModeNo]
+MOV EDI,SVGAModInfoBufAddr
+MOV AX,4F01H
+INT 10H
+;there's no need to check again
+
 MOV SI,FloppyOK
 CALL printstr
 CALL newline
@@ -500,12 +509,12 @@ CALL newline
 MOV AX,4F02h
 MOV BX,WORD [BestSVGAModeNo]	; BX -> VESA/SVGA Video Mode number (may also be std modes 00-13H)
                 ;(bit 15 set = don't clear video memory on mode set)
-				;mode : 0x180 or 0x142
+				;set the selected video mode
 ADD BX,4000H
 INT 10H
 CMP AX,004Fh  ;AH=0 means successful (else failed)
               ;AL=4fH means function supported
-JNZ setvbefailed
+JNZ getsvgamodfailed
 
 ;enter protect mode
 CLI
@@ -852,7 +861,7 @@ IDT_POINTER:
 
 ;some necessary string
 Welcomemsg db 'Loaded successfully!',0dh,0ah
-           db 'Welcome to Eos!',0dh,0ah,'$'
+           db 'Welcome to EOS!',0dh,0ah,'$'
        
 nok DB '.$'
 KernelFileName:		DB	"KERNEL  BIN",0

@@ -1,15 +1,15 @@
-;----------Eos mbr for BIOS----------
+;----------EOS mbr for BIOS----------
 ;    File name:mbr.asm
 ;
 ;    Copyright (C) 2023 by Zink
-;    This file is part of Eos
+;    This file is part of EOS
 ;
-;    Eos is free software: you can redistribute it and/or modify
+;    EOS is free software: you can redistribute it and/or modify
 ;    it under the terms of the GNU General Public License as published by
 ;    the Free Software Foundation, either version 3 of the License, or
 ;    (at your option) any later version.
 ;
-;    Eos is distributed in the hope that it will be useful,
+;    EOS is distributed in the hope that it will be useful,
 ;    but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;    GNU General Public License for more details.
@@ -18,7 +18,7 @@
 ;    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;
-;Eos Main structure:
+;EOS Main structure:
 ;
 ;|----------------------|
 ;|	100000 ~ END	|
@@ -91,7 +91,7 @@ NOP
 
 ;BPB data. See docs/bootloader/Fat12.txt for more detailed information.
 
-OEMName           db 'Eos OS  '  
+OEMName           db 'EOS OS  '  
 BytesPerSector    dw 512       
 SectorPerCluster  db 1           
 ReservedSector    dw 1           
@@ -108,7 +108,7 @@ DriveNumber       db 0
 Reserved1         db 0           
 BootSign          db 29h         
 VolumeID          dd 0           
-VolumeLabel       db 'Eos 1.0    '
+VolumeLabel       db 'Eos OS     '
 FileSystem        db 'FAT12   '  
 ;========================
 

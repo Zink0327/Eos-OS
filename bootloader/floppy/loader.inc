@@ -2,14 +2,14 @@
 ;    File name:loader.inc
 ;
 ;    Copyright (C) 2023 by Zink
-;    This file is part of Eos
+;    This file is part of EOS
 ;
-;    Eos is free software: you can redistribute it and/or modify
+;    EOS is free software: you can redistribute it and/or modify
 ;    it under the terms of the GNU General Public License as published by
 ;    the Free Software Foundation, either version 3 of the License, or
 ;    (at your option) any later version.
 ;
-;    Eos is distributed in the hope that it will be useful,
+;    EOS is distributed in the hope that it will be useful,
 ;    but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;    GNU General Public License for more details.
@@ -17,8 +17,12 @@
 ;    You should have received a copy of the GNU General Public License
 ;    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
-
+                           ;offset
+SVGAModWidthB    dw 1024   ;<--0x02
+SVGAModHeightB   dw 768    ;0x04
+SVGAModWidth     dw 1920   ;0x06
+SVGAModHeight    dw 1080   ;0x08
+SVGAModBpp       dw 24     ;0x0a
 
 
 BytesPerSector    dw 512         ;How many bytes on each sector(must be 512)
@@ -37,5 +41,6 @@ DriveNumber       db 0           ;The drive number of int 13h
 Reserved1         db 0           ;unused
 BootSign          db 29h         ;Extended bootstrap sign
 VolumeID          dd 0           ;volume id
-VolumeLabel       db 'Eos 1.0    ';Volume Label(must be 11 byte)
+VolumeLabel       db 'Eos OS     ';Volume Label(must be 11 byte)
 FileSystem        db 'FAT12   '  ;The file system(must be 8 byte)
+
