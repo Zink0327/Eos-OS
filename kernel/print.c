@@ -1,15 +1,15 @@
-/*----------Eos print function for kernel----------
+/*----------EOS print function for kernel----------
     File name:print.c
 
     Copyright (C) 2023 by Zink
-    This file is part of Eos
+    This file is part of EOS
 
-    Eos is free software: you can redistribute it and/or modify
+    EOS is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Eos is distributed in the hope that it will be useful,
+    EOS is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
@@ -23,7 +23,7 @@
 #include "lib_k.h"
 extern inline int strlen(char * String);
 
-void putchar_k(unsigned int * fb,int Xsize,int x,int y,unsigned int FRcolor,unsigned int BKcolor,unsigned char fontn)
+void putchar_k(unsigned int * fb,unsigned int Xsize,int x,int y,unsigned int FRcolor,unsigned int BKcolor,unsigned char fontn)
 {
     int i = 0, j = 0, testval = 0;
     unsigned int *addr = NULL;
@@ -443,12 +443,12 @@ int print(unsigned int fcolor,unsigned int bcolor,const char * fmt,...)
 			position.x_pos--;
 			if(position.x_pos < 0)
 			{
-				position.x_pos = (position.x_res / position.x_size - 1) * position.x_size;
+				position.x_pos = (backupscrn.x_res / backupscrn.x_size - 1) * backupscrn.x_size;
 				position.y_pos--;
 				if(position.y_pos < 0)
-					position.y_pos = (position.y_res / position.y_size - 1) * position.y_size;
+					position.y_pos = (backupscrn.y_res / backupscrn.y_size - 1) * backupscrn.y_size;
 			}	
-			putchar_k(position.fbaddr , position.x_res , position.x_pos * position.x_size , position.y_pos * position.y_size , fcolor , bcolor , ' ');	
+			putchar_k(backupscrn.fbaddr , backupscrn.x_res , position.x_pos * backupscrn.x_size , position.y_pos * backupscrn.y_size , fcolor , bcolor , ' ');	
 		}
 		else if((unsigned char)*(buf + count) == '\t')
 		{
@@ -456,22 +456,22 @@ int print(unsigned int fcolor,unsigned int bcolor,const char * fmt,...)
 
 _tab:
 			line--;
-			putchar_k(position.fbaddr , position.x_res , position.x_pos * position.x_size , position.y_pos * position.y_size , fcolor , bcolor , ' ');	
+			putchar_k(backupscrn.fbaddr , backupscrn.x_res , position.x_pos * backupscrn.x_size , position.y_pos * backupscrn.y_size , fcolor , bcolor , ' ');	
 			position.x_pos++;
 		}
 		else
 		{
-			putchar_k(position.fbaddr , position.x_res , position.x_pos * position.x_size , position.y_pos * position.y_size , fcolor , bcolor , (unsigned char)*(buf + count));
+			putchar_k(backupscrn.fbaddr , backupscrn.x_res , position.x_pos * backupscrn.x_size , position.y_pos * backupscrn.y_size , fcolor , bcolor , (unsigned char)*(buf + count));
 			position.x_pos++;
 		}
 
 
-		if(position.x_pos >= (position.x_res / position.x_size))
+		if(position.x_pos >= (backupscrn.x_res / backupscrn.x_size))
 		{
 			position.y_pos++;
 			position.x_pos = 0;
 		}
-		if(position.y_pos >= (position.y_res / position.y_size))
+		if(position.y_pos >= (backupscrn.y_res / backupscrn.y_size))
 		{
 			position.y_pos = 0;
 		}

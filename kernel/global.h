@@ -1,5 +1,5 @@
-/*----------EOS kernel link script----------
-    File name:linkkernel.lds
+/*----------EOS global definition----------
+    File name:global.h
 
     Copyright (C) 2023 by Zink
     This file is part of EOS
@@ -19,45 +19,29 @@
 
 */
 
-OUTPUT_FORMAT("elf64-x86-64","elf64-x86-64","elf64-x86-64")
-OUTPUT_ARCH(i386:x86-64)
-ENTRY(_start)
-SECTIONS
-{
+#ifndef __GLOBAL_H__
+#define __GLOBAL_H__
 
-	. = 0xffff800000000000 + 0x100000;
-	.text :
-	{
-		_text = .;
-		*(.text)
-		_etext = .;
-	}
+#include "linkage.h"
 
-	. = ALIGN(8);
+typedef long DWORD;
+typedef int WORD;
+typedef char BYTE;
 
-	.data :
-	{
-		_data = .;
-		*(.data)		
-		_edata = .;
-	}
 
-	.rodata : 
-	{
-		_rodata = .;	
-		*(.rodata)
-		_erodata = .;
-	}
 
-	. = ALIGN(32768);
-	.data.init_task : { *(.data.init_task) }
 
-	.bss :
-	{
-		_bss = .;
-		*(.bss)
-		_ebss = .;
-	}
 
-	_end = .;
-}
+
+/* Feel free to edit the following configs */
+
+#define EOS_CHIP_STRUCTURE x86_64
+#define EOS_BOOT_WAY BIOS
+
+
+/* end of configs */
+
+
+#include SYMBOL_NAME_STR2(init/EOS_CHIP_STRUCTURE/EOS_BOOT_WAY/init.h)
+
+#endif

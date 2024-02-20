@@ -1,15 +1,15 @@
-/*----------Eos print function for kernel----------
+/*----------EOS print function for kernel----------
     File name:print.h
 
     Copyright (C) 2023 by Zink
-    This file is part of Eos
+    This file is part of EOS
 
-    Eos is free software: you can redistribute it and/or modify
+    EOS is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Eos is distributed in the hope that it will be useful,
+    EOS is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
@@ -23,7 +23,6 @@
 #define _PRINTF_K
 
 #include <stdarg.h>
-#include "linkage.h"
 #include "lib_k.h"
 #include "font.h"
 
@@ -49,31 +48,26 @@
 #define INDIGO	0x00FFFF
 #define PURPLE	0x8000FF
 
-/* font data */
-/* extern unsigned char font[256][16]; */
-
-/* buffer */
-char buf[4096]={0};
-
-struct _position{
-	/* resolution */
-	int x_res;
-	int y_res;
-	/* position */
+struct _position {
 	int x_pos;
 	int y_pos;
-	/* size */
-	int x_size;
-	int y_size;
-
-	unsigned int *fbaddr;
-	unsigned long fblen;
-
 };
 
 struct _position position;
 
-void putchar_k(unsigned int * fb,int Xsize,int x,int y,unsigned int FRcolor,unsigned int BKcolor,unsigned char fontn);
+struct screenbkup {
+    unsigned int *fbaddr;
+    unsigned long fblen;
+    unsigned int x_res;
+    unsigned int y_res;
+    int x_size;
+    int y_size;
+} backupscrn;
+
+/* buffer */
+char buf[4096]={0};
+
+void putchar_k(unsigned int * fb, unsigned int Xsize,int x,int y,unsigned int FRcolor,unsigned int BKcolor,unsigned char fontn);
 
 /* transfer string to number */
 int atoi_k(const char **s);
@@ -90,7 +84,7 @@ static char * itoa_k(char * str, long num, int base, int size, int precision ,in
 
 int vsprintf_k(char * buf,const char *fmt, va_list args);
 
-/* print a string in a format way */
+/* print a string to a certain place in a format way */
 int print(unsigned int fcolor,unsigned int bcolor,const char * _Format,...);
 
 

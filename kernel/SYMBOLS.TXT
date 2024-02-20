@@ -1,0 +1,76 @@
+SYMBOL LIST
+
+
+DEFINED IN print.h:
+struct _position   
+struct screenbkup
+void putchar_k()
+int atoi_k()
+#define do_div(n,base)
+static char * itoa_k()
+int vsprintf_k()
+int print()
+
+DEFINED IN global.h
+#define EOS_CHIP_STRUCTURE
+#define EOS_BOOT_WAY
+
+DEFINED IN font.h
+unsigned char font[256][16]
+
+DEFINED IN linkage.h
+#define L1_CACHE_BYTES
+#define asmlinkage
+#define ____cacheline_aligned
+#define SYMBOL_NAME(X)
+#define SYMBOL_NAME_STR(X)
+#define SYMBOL_NAME_STR2(X)
+#define SYMBOL_NAME_LABEL(X)
+#define SYMBOL_NAME_COMBINE(X,Y)
+#define SYMBOL_NAME_COMBINE2(X,Y)
+#define ENTRY(name)
+
+DEFINED IN lib_k.h
+#define container_of(ptr,type,member)
+#define sti()
+#define cli()
+#define nop()
+#define io_mfence()
+#define NULL
+struct List
+inline void list_init()
+inline void list_add_to_behind()
+inline void list_add_to_before()
+inline void list_del()
+inline long list_is_empty()
+inline struct List * list_prev()
+inline struct List * list_next()
+inline void * memcpy()
+inline int memcmp()
+inline void * memset()
+inline char * strcpy()
+inline char * strncpy()
+inline char * strcat()
+inline int strcmp()
+inline int strncmp()
+inline int strlen()
+inline unsigned long bit_set()
+inline unsigned long bit_get()
+inline unsigned long bit_clean()
+inline unsigned char io_in8()
+inline unsigned int io_in32()
+inline void io_out8()
+inline void io_out32()
+#define port_insw(port,buffer,nr)
+#define port_outsw(port,buffer,nr)
+
+DEFINED IN main.h
+
+DEFINED IN init/x86_64/BIOS/init.h
+struct _scrnconfig
+struct _KernelConfig
+int init()
+
+DEFINED IN vbe.h
+struct _svgainfoblk
+struct _svgamodinfostruct

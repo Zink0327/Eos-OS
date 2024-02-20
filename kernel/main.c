@@ -1,15 +1,15 @@
-/*----------Eos kernel entry----------
+/*----------EOS kernel entry----------
     File name:main.c
 
     Copyright (C) 2023 by Zink
-    This file is part of Eos
+    This file is part of EOS
 
-    Eos is free software: you can redistribute it and/or modify
+    EOS is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Eos is distributed in the hope that it will be useful,
+    EOS is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
@@ -21,25 +21,35 @@
 
 #include "main.h"
 
-void SystemPanic()
+void SystemCollapsed()
 {
     // 
     while(1);
 }
 
 
-int Start_Kernel(KernelConfig config)
+int Start_Kernel(kernelconfig config)
 {
+    kernelconfig osconf;
+
     //  init everything if necessary
-    BIOSinit();   //at ./init/BIOS/BIOSinit.c
-    print(WHITE,BLACK,)
-    //  start the first process
+    init(&osconf);  //defined at ./global.h
+    backupscrn.fbaddr = (unsigned int *)(osconf.screen.fbaddr + 0xffff800000000000);
+    backupscrn.fblen = osconf.screen.fblen;
+    backupscrn.x_res = osconf.screen.x_res;
+    backupscrn.y_res = osconf.screen.y_res;
+    backupscrn.x_size = osconf.screen.x_size;
+    backupscrn.y_size = osconf.screen.y_size;
+
+    print(WHITE,BLACK,"hello world!");
+
+    //  load and start the "real" kernel
     
 
-    //  loop over and over again
+    //  receive interrupt from EIH
     while(1)
         ;
     
     //  it isn't supposed to be here
-    SystemPanic();
+    SystemCollapsed();
 }
