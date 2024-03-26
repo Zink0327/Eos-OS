@@ -18,11 +18,9 @@
 ;    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
                            ;offset
-SVGAModWidthB    dw 1024   ;<--0x02
-SVGAModHeightB   dw 768    ;0x04
-SVGAModWidth     dw 1920   ;0x06
-SVGAModHeight    dw 1080   ;0x08
-SVGAModBpp       dw 24     ;0x0a
+SVGAModWidth    dw 1280   ;<--0x02
+SVGAModHeight   dw 720    ;0x04
+SVGAModBpp       dw 24     ;0x06
 
 
 BytesPerSector    dw 512         ;How many bytes on each sector(must be 512)

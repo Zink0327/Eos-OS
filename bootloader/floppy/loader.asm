@@ -417,6 +417,8 @@ MOV EDI,SVGAModInfoBufAddr
 
 getsvgamodinfo:
 MOV CX,WORD [ES:ESI]   ; get the first value of SVGA mode
+CMP CX,0
+JZ nextone
 PUSH CX
 
 ;display SVGA mode
@@ -431,7 +433,7 @@ POP AX
 
 POP CX
 CMP CX,0FFFFH
-JZ getsvgamodfinished
+JZ getsvgamodfailed
 
 MOV AX,4F01H
 INT 10H
@@ -441,38 +443,51 @@ INC DWORD [SVGAModeCounter]
 
 ;select the video mode
 PUSH AX
-MOV AX,WORD [ES:EDI]
-AND AX,90H   ;Check if this is a graphics mode with linear frame buffer support
-CMP AX,90H
-JNZ finished
+MOV AL,[ES:EDI]
+AND AL,90H   ;Check if this is a graphics mode with linear frame buffer support
+CMP AL,90H
+JNZ nextone
+
 
 MOV AX,WORD [ES:EDI + 12H]
+PUSH AX
+CALL numtoascii
+MOV [SVGAmode + 2H],BX
+MOV AL,AH
+CALL numtoascii
+MOV [SVGAmode],BX
+POP AX
 CMP AX,[SVGAModWidth]
-JNZ continue
+JNZ nextone
+
 MOV AX,WORD [ES:EDI + 14H]
+PUSH AX
+CALL numtoascii
+MOV [SVGAmode + 7H],BX
+MOV AL,AH
+CALL numtoascii
+MOV [SVGAmode + 5H],BX
+POP AX
 CMP AX,[SVGAModHeight]
-JNZ continue
-MOV AX,WORD [ES:EDI + 19H]
-CMP AX,[SVGAModBpp]
-JNZ continue
+JNZ nextone
+
+MOV AH,0
+MOV AL,BYTE [ES:EDI + 19H]
+PUSH AX
+CALL numtoascii
+MOV [SVGAmode + 0AH],BX
+POP AX
+CMP AL,[SVGAModBpp]
+JNZ nextone
+
 MOV WORD [BestSVGAModeNo],CX
 JMP getsvgamodfinished
 
-continue:
-MOV AX,WORD [ES:EDI + 12H]
-CMP AX,[SVGAModWidthB]
-JNZ finished
-MOV AX,WORD [ES:EDI + 14H]
-CMP AX,[SVGAModHeightB]
-JNZ finished
-MOV AX,WORD [ES:EDI + 19H]
-CMP AX,[SVGAModBpp]
-JNZ finished
-MOV WORD [BestSVGAModeNo],CX
-
-finished:
+MOV SI,SVGAmode
+CALL printstr
 POP AX
 
+nextone:
 ADD ESI,2
 ;ADD EDI,100H   ;if the mode is not correct, rewrite this buffer.
 JMP getsvgamodinfo
@@ -493,24 +508,19 @@ getsvgamodfinished:
 CMP WORD [BestSVGAModeNo],0  ;if this value is 0,
 JZ getsvgamodfailed          ;that means no svga mode matches. 
 
-;Rewrite the buffer 0x8200
-MOV CX,WORD [BestSVGAModeNo]
-MOV EDI,SVGAModInfoBufAddr
-MOV AX,4F01H
-INT 10H
-;there's no need to check again
-
 MOV SI,FloppyOK
 CALL printstr
 CALL newline
 
 ;set the SVGA mode(VESA VBE)
 
-MOV AX,4F02h
+;(Yuki)
+
+MOV AX,4F02h     
 MOV BX,WORD [BestSVGAModeNo]	; BX -> VESA/SVGA Video Mode number (may also be std modes 00-13H)
                 ;(bit 15 set = don't clear video memory on mode set)
 				;set the selected video mode
-ADD BX,4000H
+ADD BX,4000H    ;set bit 15
 INT 10H
 CMP AX,004Fh  ;AH=0 means successful (else failed)
               ;AL=4fH means function supported
@@ -548,7 +558,7 @@ CALL longmodeissupported
 TEST EAX,EAX
 JZ notsupported
 
-;init temporary page table 0x90000
+;init temporary page table at 0x90000
 
 MOV DWORD [0x90000],0x91007
 MOV DWORD [0x90800],0x91007		
@@ -617,20 +627,7 @@ JMP notsupported
 [SECTION .s116]
 [BITS 16]
 ;==========functions===============
-;Function name: numtoascii
-;usage: turn number to ascii code
-;input value: cl - input number
-;return value: al - the second digits ascii code of the number
-;              ah - the first digits ascii code of the number
-numtoascii:     
-     mov ax,0
-     mov al,cl  
-     mov bl,10
-     div bl
-     add ax,3030h
-     ret
- 
-;Function name: displayal
+ ;Function name: displayal
 ;usage: print the value in al
 ;input value: al - input number
 ;return value: no
@@ -670,6 +667,49 @@ displayal:
 	pop	ecx
 	
 	ret
+
+
+;Function name: numtoascii
+;usage: turn number to ascii code
+;input value: al - input number
+;return value: bl - the second digits ascii code of the number
+;              bh - the first digits ascii code of the number
+numtoascii:
+	PUSH	ECX
+	PUSH	EDX
+	PUSH	EDI
+	
+	MOV	AH,	0FH
+	MOV	DL,	AL
+	SHR	AL,	4
+	MOV	ECX,	2
+
+.BEGN:
+	SHL BX,8
+	
+	
+	AND	AL,	0FH
+	CMP	AL,	9
+	JA	.letter
+	ADD	AL,	'0'
+	JMP	.number
+.letter:
+
+	SUB	AL,	0AH
+	ADD	AL,	'A'
+.number:
+
+	MOV BL,AL
+	
+	MOV	AL,	DL
+	LOOP	.BEGN
+
+	POP	EDI
+	POP	EDX
+	POP	ECX
+	
+	RET
+
 
 ;Function name: readinfo
 ;usage: print where it reads
@@ -864,7 +904,7 @@ Welcomemsg db 'Loaded successfully!',0dh,0ah
            db 'Welcome to EOS!',0dh,0ah,'$'
        
 nok DB '.$'
-KernelFileName:		DB	"KERNEL  BIN",0
+KernelFileName:		DB	"CARBON  BIN",0
 nokernelbin DB 'no kernel!','$'
 Floppyerror DB 'ERR','$'
 FloppyOK DB 'OK','$'
@@ -886,6 +926,7 @@ BestSVGAModeNo  DW 0
 DisplayPosition DD 0
 
 
+SVGAmode db '????x????,?? $'
 cylind  db 'cyl:?? $',0    
 header  db 'hds:?? $',0    
 sector  db 'sct:?? $',1    
