@@ -17,12 +17,11 @@
 ::    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ::src/core/Makefile.bat
-@echo off
+::@echo off
 echo entering directory %~dp0
 if "%1" equ "clean" (goto clean) else (goto build)
 
 :build
-
 copy %~dp0init\%ARCH%\%BOOTWAY%\* %~dp0
 
 if exist %WORKROOT%tools\gcc\bin\%CC% (
@@ -115,7 +114,13 @@ echo FATAL ERROR: %WORKROOT%tools\gcc\bin\%OBJCOPY% not found!
 goto end
 )
 
+:clean 
+dir %~dp0init\%ARCH%\%BOOTWAY%\ /b > initfl.txt
 
+
+for /f %%i in (initfl.txt) do del %~dp0%%i /q
+del %~dp0initfl.txt /q
+goto end
 
 :end
 echo leaving directory %~dp0
