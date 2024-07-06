@@ -417,8 +417,7 @@ MOV EDI,SVGAModInfoBufAddr
 
 getsvgamodinfo:
 MOV CX,WORD [ES:ESI]   ; get the first value of SVGA mode
-CMP CX,0
-JZ nextone
+
 PUSH CX
 
 ;display SVGA mode
@@ -432,6 +431,8 @@ CALL displayal
 POP AX
 
 POP CX
+CMP CX,0
+JZ nextone
 CMP CX,0FFFFH
 JZ getsvgamodfailed
 
@@ -531,15 +532,17 @@ CLI
 LGDT [GdtPtr]
 ;LIDT [IDT_POINTER]
 
+;jump to protect mode
+MOV SI,Jumptoprmodemsg
+CALL printstr
+CALL newline
+
 ;open the switch of protect mode
 MOV EAX,CR0
 OR EAX,1
 MOV CR0,EAX
 
-;jump to protect mode
-MOV SI,Jumptoprmodemsg
-CALL printstr
-CALL newline
+; so long, real mode!
 JMP DWORD SelectorCode32:gototmpprot
 
 [SECTION .s32]
