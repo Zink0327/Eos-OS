@@ -26,15 +26,16 @@
 
 struct _scrnconfig {
  /* resolution */
-	unsigned long x_res;
-	unsigned long y_res;
+	uint16_t x_res;
+	uint16_t y_res;
+    uint8_t bpp;
 	
 	/* size */
-	unsigned int x_size;
-	unsigned int y_size;
+	uint16_t x_size;
+	uint16_t y_size;
  /* frame buffer and length */
-    unsigned int *fbaddr;
-    unsigned long fblen;
+    uint8_t *fbaddr;
+    uint32_t fblen;
 
 };
 

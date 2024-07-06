@@ -24,12 +24,15 @@ int init(kernelconfig *conf)
 {
     svgamodinfostruct *modinfo = (svgamodinfostruct *)0x8200;
     
-    conf -> screen -> fbaddr = (unsigned int*)(modinfo -> framebuffer);
-    conf -> screen -> fblen = (unsigned long)(modinfo -> width * modinfo -> height * modinfo -> bpp);
+    conf -> screen -> fbaddr = (unsigned char *)(modinfo -> framebuffer);
+    conf -> screen -> fblen = (unsigned long)(modinfo -> width * modinfo -> height * modinfo -> bpp / 8);
 
-    conf -> screen -> x_res = (unsigned int)modinfo -> width;
-    conf -> screen -> y_res = (unsigned int)modinfo -> height;
+    conf -> screen -> x_res = modinfo -> width;
+    conf -> screen -> y_res = modinfo -> height;
+    conf -> screen -> bpp = modinfo -> bpp;
 
     conf -> screen -> x_size = 8;
     conf -> screen -> y_size = 16;
+
+    return 0;
 }

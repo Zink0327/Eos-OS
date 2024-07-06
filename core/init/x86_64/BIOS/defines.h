@@ -22,8 +22,6 @@
 #ifndef _EOS_X86_64_TYPEDEF
 #define _EOS_X86_64_TYPEDEF
 
-typedef unsigned char uint8_t;
-typedef unsigned int uint16_t;
-typedef unsigned long uint32_t;
+#include "global.h"
 
 #endif
