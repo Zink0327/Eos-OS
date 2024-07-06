@@ -25,17 +25,18 @@
 #include <stdarg.h>
 #include "lib_k.h"
 #include "font.h"
+#include "global.h"
 
 #define is_digit(c) ((c) >= '0' && (c) <= '9')
 
-/* some token */
-#define ZEROPAD	1		/* fill with zero */
-#define SIGNED	2		/* unsigned/signed long */
-#define PLUS	4		/* show plus */
-#define SPACE	8		/* space if plus */
-#define LEFT	16		/* left justified */
-#define SPECIAL	32		/* base 8(0256) or base 16(0x256) */
-#define LOWERCASE	64		/* use 'abcdef' instead of 'ABCDEF' */
+/* some token used by itoa_k() */
+#define ZEROPAD	1		/* fill the rest with zero            00000001*/
+#define SIGNED	2		/* unsigned/signed long               00000010*/
+#define PLUS	4		/* show plus                          00000100*/
+#define SPACE	8		/* replace plus with space            00001000*/
+#define LEFT	16		/* left justified                     00010000*/
+#define SPECIAL	32		/* base 8(0256) or base 16(0x256)     00100000*/
+#define LOWERCASE	64  /* use 'abcdef' instead of 'ABCDEF'   01000000*/
 
 /* some useful colors */
 #define WHITE 	0xFFFFFF
@@ -49,25 +50,35 @@
 #define PURPLE	0x8000FF
 
 struct _position {
-	int x_pos;
-	int y_pos;
+	int16_t x_pos;
+	int16_t y_pos;
 };
 
 struct _position position;
 
 struct screenbkup {
-    unsigned int *fbaddr;
-    unsigned long fblen;
-    unsigned int x_res;
-    unsigned int y_res;
-    int x_size;
-    int y_size;
+    uint8_t *fbaddr;
+    uint32_t fblen;
+    uint16_t x_res;
+    uint16_t y_res;
+    uint8_t bpp;
+    uint16_t x_size;
+    uint16_t y_size;
 } backupscrn;
 
 /* buffer */
-char buf[4096]={0};
+char tmpbuf[4096]={0};
 
-void putchar_k(unsigned int * fb, unsigned int Xsize,int x,int y,unsigned int FRcolor,unsigned int BKcolor,unsigned char fontn);
+void putchar_k(
+    uint8_t * fb,    /* frame buffer */
+    uint8_t bpp,     /* BIT per pixel */
+    uint16_t width,  /* X resolution */
+    int x,           /* x-coordinate */
+    int y,           /* y-coordinate */
+    uint32_t FRcolor,/* character's color */
+    uint32_t BKcolor,/* background color */
+    uint8_t fontn    /* character to be displayed */
+);
 
 /* transfer string to number */
 int atoi_k(const char **s);
@@ -85,7 +96,7 @@ static char * itoa_k(char * str, long num, int base, int size, int precision ,in
 int vsprintf_k(char * buf,const char *fmt, va_list args);
 
 /* print a string to a certain place in a format way */
-int print(unsigned int fcolor,unsigned int bcolor,const char * _Format,...);
+int print(uint32_t fcolor, uint32_t bcolor,const char * _Format,...);
 
 
 #endif

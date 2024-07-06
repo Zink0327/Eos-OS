@@ -21,7 +21,6 @@
 #ifndef _EOS_MAIN_H_
 #define _EOS_MAIN_H_
 
-#include "global.h"
 #include "print.h"
 
 

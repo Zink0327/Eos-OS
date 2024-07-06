@@ -23,29 +23,43 @@
 #include "lib_k.h"
 extern inline int strlen(char * String);
 
-void putchar_k(unsigned int * fb,unsigned int Xsize,int x,int y,unsigned int FRcolor,unsigned int BKcolor,unsigned char fontn)
+
+void putchar_k(uint8_t* fb, uint8_t bpp, uint16_t width, int x, int y, uint32_t FRcolor, uint32_t BKcolor, uint8_t fontn)
 {
-    int i = 0, j = 0, testval = 0;
-    unsigned int *addr = NULL;
-    unsigned char *fontp = NULL;
-    fontp = font[fontn];
+    if (fb == NULL || bpp == 0 || (bpp % 8) != 0)
+        return;
+
+    int i = 0, j = 0, testval = 0, btpp = bpp / 8, counter = btpp;
+    uint8_t *addr = NULL, *fontp = font[fontn], inbox = 0;
 
     for (i = 0; i < 16; i++)
     {
-        addr = fb + Xsize * ( y + i ) + x;
+        addr = fb + (width * ( y + i ) + x) * btpp;
         testval = 0x100;
         for (j = 0; j < 8; j++)
         {
             testval = testval >> 1;
             if (*fontp & testval)
             {
-                *addr = FRcolor;
+                while (counter != 0)
+                {
+                    inbox = (FRcolor >> (8 * (counter - 1))) & 0x000000FF;
+                    *addr = inbox;
+                    ++addr;
+                    counter--;
+                }
             }
             else
             {
-                *addr = BKcolor;
+                while (counter != 0)
+                {
+                    inbox = (BKcolor >> (8 * (counter - 1))) & 0x000000FF;
+                    *addr = inbox;
+                    ++addr;
+                    counter--;
+                }
             }
-            addr++;
+            counter = btpp;
         }
         fontp++;
     }
@@ -64,10 +78,10 @@ int atoi_k(const char **s)
 static char * itoa_k(char * str, long num, int base, int size, int precision,int type)
 {
 
-    char c,sign,tmp[50];
+    char c = 0, sign = 0, tmp[50] = {0};
 
     /* counter */
-    int i;
+    int i = 0;
 	
 	const char *digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -80,7 +94,7 @@ static char * itoa_k(char * str, long num, int base, int size, int precision,int
 
     /* base can't be lower than 2 or higher than 36. If so, return. */
     if (base < 2 || base > 36)
-        return -1;
+        return NULL;
 
     c = (type & ZEROPAD) ? '0' : ' ' ;
 
@@ -192,15 +206,15 @@ static char * itoa_k(char * str, long num, int base, int size, int precision,int
 
 
 
-int vsprintf(char * buf,const char *fmt, va_list args)
+int vsprintf_k(char * buf,const char *fmt, va_list args)
 {
-    char * str,*s;
-    int flags;
-    int field_width;
-    int precision;
-    int len,i;
+    char * str = NULL,*s = NULL;
+    int flags = 0, field_width = 0, precision = 0, len = 0, i = 0;
 
-    int qualifier;		/* 'h', 'l', 'L' or 'Z' for integer fields */
+    int qualifier = 0;		/* 'h', 'l', 'L' or 'Z' for integer fields */
+
+    if (buf == NULL || fmt == NULL)
+        return 0;
 
     for(str = buf; *fmt; fmt++)
     {
@@ -281,7 +295,7 @@ repeat:
 
 
         qualifier = -1;
-        if(*fmt == 'h' || *fmt == 'l' || *fmt == 'L' || *fmt == 'Z')  /* e.g. %ld lone integer %lf double float */
+        if(*fmt == 'h' || *fmt == 'l' || *fmt == 'L' || *fmt == 'Z')  /* e.g. %ld long integer %lf double float */
         {
             qualifier = *fmt;
             fmt++;
@@ -300,7 +314,7 @@ repeat:
                     *str++ = ' ';
                 }
             }
-            *str++ = (unsigned char)va_arg(args, int);
+            *str++ = (uint8_t)va_arg(args, int);
             while(--field_width > 0)
             {
                 *str++ = ' ';
@@ -413,32 +427,34 @@ repeat:
 }
 
 
-int print(unsigned int fcolor,unsigned int bcolor,const char * fmt,...)
+int print(uint32_t fcolor, uint32_t bcolor, const char* _Format, ...)
 {
-	int i = 0;
-	int count = 0;
-	int line = 0;
+    int32_t i = 0, count = 0, line = 0;
+    uint8_t ifnbt = 0;
 	va_list args;
-	va_start(args, fmt);
+	va_start(args, _Format);
 
-	i = vsprintf(buf,fmt, args);
+	i = vsprintf_k(tmpbuf,_Format, args);
 
 	va_end(args);
 
 	for(count = 0;count < i || line;count++)
 	{
 		////	add \n \b \t
+        ifnbt = (uint8_t)(*(tmpbuf + count));
+
 		if(line > 0)
 		{
-			count--;
+            count--;
+            ifnbt = (uint8_t)(*(tmpbuf + count));
 			goto _tab;
 		}
-		if((unsigned char)*(buf + count) == '\n')
+		if(ifnbt == '\n')
 		{
 			position.y_pos++;
 			position.x_pos = 0;
 		}
-		else if((unsigned char)*(buf + count) == '\b')
+		else if(ifnbt == '\b')
 		{
 			position.x_pos--;
 			if(position.x_pos < 0)
@@ -448,20 +464,20 @@ int print(unsigned int fcolor,unsigned int bcolor,const char * fmt,...)
 				if(position.y_pos < 0)
 					position.y_pos = (backupscrn.y_res / backupscrn.y_size - 1) * backupscrn.y_size;
 			}	
-			putchar_k(backupscrn.fbaddr , backupscrn.x_res , position.x_pos * backupscrn.x_size , position.y_pos * backupscrn.y_size , fcolor , bcolor , ' ');	
+            putchar_k(backupscrn.fbaddr, backupscrn.bpp, backupscrn.x_res, position.x_pos * backupscrn.x_size, position.y_pos * backupscrn.y_size, fcolor, bcolor, ' ');
 		}
-		else if((unsigned char)*(buf + count) == '\t')
+		else if(ifnbt == '\t')
 		{
-			line = ((position.x_pos + 8) & ~(8 - 1)) - position.x_pos;
+            line = ((position.x_pos + 8) & ~(8 - 1)) - position.x_pos;
 
 _tab:
 			line--;
-			putchar_k(backupscrn.fbaddr , backupscrn.x_res , position.x_pos * backupscrn.x_size , position.y_pos * backupscrn.y_size , fcolor , bcolor , ' ');	
+            putchar_k(backupscrn.fbaddr, backupscrn.bpp, backupscrn.x_res, position.x_pos * backupscrn.x_size, position.y_pos * backupscrn.y_size, fcolor, bcolor, ' ');
 			position.x_pos++;
 		}
 		else
 		{
-			putchar_k(backupscrn.fbaddr , backupscrn.x_res , position.x_pos * backupscrn.x_size , position.y_pos * backupscrn.y_size , fcolor , bcolor , (unsigned char)*(buf + count));
+            putchar_k(backupscrn.fbaddr, backupscrn.bpp, backupscrn.x_res, position.x_pos * backupscrn.x_size, position.y_pos * backupscrn.y_size, fcolor, bcolor, ifnbt);
 			position.x_pos++;
 		}
 

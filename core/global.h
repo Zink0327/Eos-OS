@@ -24,24 +24,22 @@
 
 #include "linkage.h"
 
-typedef long DWORD;
-typedef int WORD;
-typedef char BYTE;
+typedef unsigned char uint8_t;
+typedef unsigned short uint16_t;
+typedef unsigned long uint32_t;
+typedef unsigned long long uint64_t;
+
+typedef char int8_t;
+typedef short int16_t;
+typedef int int32_t;
+typedef long long int64_t;
+
+typedef uint64_t QWORD;
+typedef uint32_t DWORD;
+typedef uint16_t WORD;
+typedef uint8_t BYTE;
 
 
-
-
-
-
-/* Feel free to edit the following configs */
-
-#define EOS_CHIP_STRUCTURE x86_64
-#define EOS_BOOT_WAY BIOS
-
-
-/* end of configs */
-
-
-#include SYMBOL_NAME_STR2(init/EOS_CHIP_STRUCTURE/EOS_BOOT_WAY/init.h)
+#include "init.h"
 
 #endif

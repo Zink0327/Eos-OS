@@ -25,16 +25,16 @@ if "%1" equ "clean" (goto clean) else (goto build)
 copy %~dp0init\%ARCH%\%BOOTWAY%\* %~dp0
 
 if exist %WORKROOT%tools\gcc\bin\%CC% (
-echo %WORKROOT%tools\gcc\bin\%CC% -mcmodel=large -fno-builtin -m64 -c %~dp0print.c -o %WORKROOT%build\print.o -fno-stack-protector
-%WORKROOT%tools\gcc\bin\%CC% -mcmodel=large -fno-builtin -m64 -c %~dp0print.c -o %WORKROOT%build\print.o -fno-stack-protector
+echo %WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64 -c %~dp0print.c -o %WORKROOT%build\print.o -fno-stack-protector
+%WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64 -c %~dp0print.c -o %WORKROOT%build\print.o -fno-stack-protector
 
 if not exist %WORKROOT%build\print.o (
 set ERRFLAG="1"
 echo error in compiling print.c!
 goto end
 )
-echo %WORKROOT%tools\gcc\bin\%CC% -mcmodel=large -fno-builtin -m64 -c %~dp0main.c -o %WORKROOT%build\main.o -fno-stack-protector
-%WORKROOT%tools\gcc\bin\%CC% -mcmodel=large -fno-builtin -m64  -c %~dp0main.c -o %WORKROOT%build\main.o -fno-stack-protector
+echo %WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64 -c %~dp0main.c -o %WORKROOT%build\main.o -fno-stack-protector
+%WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64  -c %~dp0main.c -o %WORKROOT%build\main.o -fno-stack-protector
 
 if not exist %WORKROOT%build\main.o (
 set ERRFLAG="1"
@@ -42,8 +42,8 @@ echo error in compiling main.c!
 goto end
 )
 
-echo %WORKROOT%tools\gcc\bin\%CC% -mcmodel=large -fno-builtin -m64 -c %~dp0init.c -o %WORKROOT%build\init.o -fno-stack-protector
-%WORKROOT%tools\gcc\bin\%CC% -mcmodel=large -fno-builtin -m64 -c %~dp0init.c -o %WORKROOT%build\init.o -fno-stack-protector
+echo %WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64 -c %~dp0init.c -o %WORKROOT%build\init.o -fno-stack-protector
+%WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64 -c %~dp0init.c -o %WORKROOT%build\init.o -fno-stack-protector
 
 if not exist %WORKROOT%build\init.o (
 set ERRFLAG="1"
