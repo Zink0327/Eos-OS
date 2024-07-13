@@ -34,7 +34,7 @@ int Start_Kernel(kernelconfig config)
 
     //  init everything if necessary
     init(&osconf);  //defined at ./global.h
-    backupscrn.fbaddr = (unsigned int *)(osconf.screen->fbaddr + 0xffff800000000000);
+    backupscrn.fbaddr = (uint8_t *)(osconf.screen->fbaddr + 0xffff800000000000);
     backupscrn.fblen = osconf.screen->fblen;
     backupscrn.x_res = osconf.screen->x_res;
     backupscrn.y_res = osconf.screen->y_res;
