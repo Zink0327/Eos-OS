@@ -34,7 +34,7 @@ void putchar_k(uint8_t* fb, uint8_t bpp, uint16_t width, int x, int y, uint32_t 
 
     for (i = 0; i < 16; i++)
     {
-        addr = fb + (width * ( y + i ) + x) * btpp;
+        addr = (uint8_t *)(fb + (width * ( y + i ) + x) * btpp);
         testval = 0x100;
         for (j = 0; j < 8; j++)
         {
@@ -43,7 +43,7 @@ void putchar_k(uint8_t* fb, uint8_t bpp, uint16_t width, int x, int y, uint32_t 
             {
                 while (counter != 0)
                 {
-                    inbox = (FRcolor >> (8 * (counter - 1))) & 0x000000FF;
+                    inbox = (uint8_t)(FRcolor >> (8 * (counter - 1))) & 0x000000FF;
                     *addr = inbox;
                     ++addr;
                     counter--;
@@ -53,7 +53,7 @@ void putchar_k(uint8_t* fb, uint8_t bpp, uint16_t width, int x, int y, uint32_t 
             {
                 while (counter != 0)
                 {
-                    inbox = (BKcolor >> (8 * (counter - 1))) & 0x000000FF;
+                    inbox = (uint8_t)(BKcolor >> (8 * (counter - 1))) & 0x000000FF;
                     *addr = inbox;
                     ++addr;
                     counter--;
