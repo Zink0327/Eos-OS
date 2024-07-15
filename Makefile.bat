@@ -1,43 +1,48 @@
-::Eos Makefile
+::EOS Makefile
 ::Copyright (C) by Zink
 
 
 ::@echo off
 echo Build started...
+
+set ERRFLAG="0"
+
 if "%1" equ "clean" ( 
 goto clean 
-) else if "%1" equ "prebuilt" ( 
-goto prebuilt 
 ) else ( 
 goto build 
 )
 
 :build
-mkdir build
+
+call .\Makefile clean
+
 call .\bootloader\Makefile floppy floppy
 
-::call .\kernel\Makefile.bat
-::copy .\kernel\kernel.bin kernel.bin
-
-if exist .\tools\edimg\edimg.exe (
-
-echo .\tools\edimg\edimg.exe imgin:./tools/edimg/fdimg0at.tek wbinimg src:.\build\mbr.bin len:512 from:0 to:0 copy from:.\build\loader.bin to:@: copy from:.\build\kernel.bin to:@: imgout:OmegaOS.img
-.\tools\edimg\edimg.exe imgin:./tools/edimg/fdimg0at.tek wbinimg src:.\build\mbr.bin len:512 from:0 to:0 copy from:.\build\loader.bin to:@: copy from:.\build\kernel.bin to:@: imgout:OmegaOS.img
-::echo .\tools\edimg\edimg.exe imgin:./tools/edimg/fdimg0at.tek wbinimg src:.\build\mbr.bin len:512 from:0 to:0 copy from:.\build\loader.bin to:@: imgout:OmegaOS.img
-::.\tools\edimg\edimg.exe imgin:./tools/edimg/fdimg0at.tek wbinimg src:.\build\mbr.bin len:512 from:0 to:0 copy from:.\build\loader.bin to:@: imgout:OmegaOS.img
-
-) else (
-echo ERROR:.\tools\edimg\edimg.exe not found!
-)
+if %ERRFLAG% equ "1" (
+echo ***********An error occured***********
+echo       please check the info above
+echo **************************************
 goto end
+)
 
-:prebuilt
-call .\prebuilt\Makefile.bat
+call .\core\Makefile.bat
+
+if %ERRFLAG% equ "1" (
+echo ***********An error occured***********
+echo       please check the info above
+echo **************************************
+goto end
+)
+
+
+echo *******Builded succeesfully!********
+
 goto end
 
 :clean
-del .\build
+call %~dp0\core\Makefile.bat clean
 goto end
 
 :end
-pause
+
