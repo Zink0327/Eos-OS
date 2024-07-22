@@ -38,10 +38,15 @@ int Start_Kernel(kernelconfig config)
     backupscrn.fblen = osconf.screen->fblen;
     backupscrn.x_res = osconf.screen->x_res;
     backupscrn.y_res = osconf.screen->y_res;
+    backupscrn.bpp = osconf.screen->bpp;
     backupscrn.x_size = osconf.screen->x_size;
     backupscrn.y_size = osconf.screen->y_size;
 
-    print(WHITE,BLACK,"hello world!");
+    int i=0x500;
+
+    print(WHITE,BLACK,"Hello world! %#x", i);
+    
+    i = 1/0;
 
     //  load and start the "real" kernel
     

@@ -1,15 +1,15 @@
-/*----------Omega kernel header----------
+/*----------EOS kernel header----------
     File name:head.S
 
     Copyright (C) 2023 by Zink
-    This file is part of Omega OS
+    This file is part of EOS
 
-    Omega OS is free software: you can redistribute it and/or modify
+    EOS is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Omega OS is distributed in the hope that it will be useful,
+    EOS is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
@@ -49,7 +49,8 @@ _start:
 
 	movq	$0x7E00,	%rsp
 
-//load cr3
+// Locate PML4E by loading CR3
+
 	movq	$0x101000,	%rax
 	movq	%rax,		%cr3
 	movq	switch_seg(%rip),	%rax
@@ -70,8 +71,9 @@ entry64:
 	movq	%rax,	%ss
 	movq	$0xffff800000007E00,	%rsp		/* rsp address */
 
+
 setup_IDT:							
-	leaq	ignore_int(%rip),	%rdx
+	leaq	ignore_int(%rip),	%rdx        /* set up interrupt handler (ignore_int) for all kinds of interrupt */
 	movq	$(0x08 << 16),	%rax
 	movw	%dx,	%ax
 	movq	$(0x8E00 << 32),	%rcx		
@@ -83,12 +85,12 @@ setup_IDT:
 	shrq	$32,	%rdx
 	leaq	IDT_Table(%rip),	%rdi
 	mov	$256,	%rcx
-rp_sidt:
+repeat_setidt:
 	movq	%rax,	(%rdi)
 	movq	%rdx,	8(%rdi)
 	addq	$0x10,	%rdi
 	dec	%rcx
-	jne	rp_sidt
+	jne	repeat_setidt
 
 setup_TSS64:
 	leaq	TSS64_Table(%rip),	%rdx
@@ -153,11 +155,11 @@ ignore_int:
 	movq	%rax,	%ds
 	movq	%rax,	%es
 
-	leaq	int_msg(%rip),	%rax			/* leaq get address */
+	leaq	int_msg(%rip),	%rax			/* leaq: get address */
 	pushq	%rax
 	movq	%rax,	%rdx
-	movq	$0x000000,	%rsi
-	movq	$0xff0000,	%rdi
+	movq	$0x00ff00,	%rsi
+	movq	$0x8000ff,	%rdi
 	movq	$0,	%rax
 	callq	print
 	addq	$0x8,	%rsp
@@ -213,8 +215,8 @@ __PDPTE:
 
 __PDE:
 
-	.quad	0x000083	
-	.quad	0x200083
+	.quad	0x000083	    /*0x 000000*/
+	.quad	0x200083    /*0x 200000*/
 	.quad	0x400083
 	.quad	0x600083
 	.quad	0x800083
@@ -226,6 +228,7 @@ __PDE:
 	.quad	0xe0a00083
 	.quad	0xe0c00083
 	.quad	0xe0e00083
+	.quad	0xe1000083
 	.fill	499,8,0
 
 .section .data

@@ -39,7 +39,4 @@ typedef uint32_t DWORD;
 typedef uint16_t WORD;
 typedef uint8_t BYTE;
 
-
-#include "init.h"
-
 #endif

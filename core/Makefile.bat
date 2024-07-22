@@ -23,6 +23,7 @@ if "%1" equ "clean" (goto clean) else (goto build)
 
 :build
 copy %~dp0init\%ARCH%\%BOOTWAY%\* %~dp0
+copy %~dp0init\%ARCH%\* %~dp0
 
 if exist %WORKROOT%tools\gcc\bin\%CC% (
 echo %WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64 -c %~dp0print.c -o %WORKROOT%build\print.o -fno-stack-protector
@@ -59,8 +60,15 @@ set ERRFLAG="1"
 echo error in generating head.S!
 goto end
 )
+:: add the assembly generating code for better debugging...
+echo %WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64 -S %~dp0print.c -o %WORKROOT%build\print.s -fno-stack-protector
+%WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64 -S %~dp0print.c -o %WORKROOT%build\print.s -fno-stack-protector
 
+echo %WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64 -S %~dp0main.c -o %WORKROOT%build\main.s -fno-stack-protector
+%WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64 -S %~dp0main.c -o %WORKROOT%build\main.s -fno-stack-protector
 
+echo %WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64 -S %~dp0init.c -o %WORKROOT%build\init.s -fno-stack-protector
+%WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64 -S %~dp0init.c -o %WORKROOT%build\init.s -fno-stack-protector
 ) else (
 set ERRFLAG="1"
 echo FATAL ERROR: %WORKROOT%tools\gcc\bin\%CC% not found!
@@ -105,7 +113,7 @@ echo %WORKROOT%tools\gcc\bin\%OBJCOPY% -I %LDLINKFMT% -S -R ".eh_frame" -R ".com
 
 if not exist %WORKROOT%build\carbon.bin (
 set ERRFLAG="1"
-echo compile error in generating carbon.bin!
+echo error in generating carbon.bin!
 goto end
 )
 ) else (
@@ -116,10 +124,12 @@ goto end
 
 :clean 
 dir %~dp0init\%ARCH%\%BOOTWAY%\ /b > initfl.txt
-
+dir %~dp0init\%ARCH%\ /b > init2fl.txt
 
 for /f %%i in (initfl.txt) do del %~dp0%%i /q
-del %~dp0initfl.txt /q
+for /f %%i in (init2fl.txt) do del %~dp0%%i /q
+
+del initfl.txt /q
 goto end
 
 :end

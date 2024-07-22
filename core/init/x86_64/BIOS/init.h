@@ -22,6 +22,8 @@
 #ifndef _X86_64_BIOS_INIT
 #define _X86_64_BIOS_INIT
 
+#define __LINEAR_ADDR(M) 
+
 #include "vbe.h"
 
 struct _scrnconfig {
@@ -35,7 +37,7 @@ struct _scrnconfig {
 	uint16_t y_size;
  /* frame buffer and length */
     uint8_t *fbaddr;
-    uint32_t fblen;
+    uint64_t fblen;
 
 };
 

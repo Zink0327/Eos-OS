@@ -83,14 +83,15 @@ void putchar_k(
 /* transfer string to number */
 int atoi_k(const char **s);
 
-/* do divition */
-#define do_div(n,base) ({ \
-int __res; \
-__asm__("divq %%rcx":"=a" (n),"=d" (__res):"0" (n),"1" (0),"c" (base)); \
-__res; })
-
 /* transfer number to string */
-static char * itoa_k(char * str, long num, int base, int size, int precision ,int type);
+static char * itoa_k(
+    char * str,         /* address to place the transfered number */
+    long num,           /* number to be transfered */
+    int size,           /* length of the number in string */
+    int base,           /* base */
+    int precision,      /* the precision to decide how many digits after decimal point */
+    int type            /* type above */
+);
 
 
 int vsprintf_k(char * buf,const char *fmt, va_list args);

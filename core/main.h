@@ -23,7 +23,7 @@
 
 #include "print.h"
 
-
+#include "init.h"
 
 
 #endif

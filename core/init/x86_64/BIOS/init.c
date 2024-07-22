@@ -24,7 +24,7 @@ int init(kernelconfig *conf)
 {
     svgamodinfostruct *modinfo = (svgamodinfostruct *)(0x8200 + 0xffff800000000000);
     
-    conf -> screen -> fbaddr = (uint8_t *)(modinfo -> framebuffer + 0xffff800000000000);
+    conf -> screen -> fbaddr = (uint8_t *)0xffff800000a00000;  // The address from 0xe0000000 was mapped to 0xffff800000a00000
     conf -> screen -> fblen = (uint32_t)(modinfo -> width * modinfo -> height * modinfo -> bpp / 8);
 
     conf -> screen -> x_res = modinfo -> width;
