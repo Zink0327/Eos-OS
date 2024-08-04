@@ -28,12 +28,19 @@ To avoid bringing something not nice to the source code, you have to create a fo
 
 After that, the folder will look like this:
 Eos-Build-Env
+
 ├─tools
+
 │  ├─edimg
+
 │  ├─nasm
+
 │  └─gcc
+
 ├─build
+
 ├─src
+
 └─(make.bat)
 
 you have to create a file "make.bat" (or any other name you like), and fill this file with these following content:
@@ -52,14 +59,20 @@ set AS=x86_64-pc-linux-as.exe
 set LD=x86_64-pc-linux-ld.exe
 set OBJCOPY=x86_64-pc-linux-objcopy.exe
 set LDLINKFMT=elf64-x86-64
+set NASM=nasm
 
 :: configure the arch and boot way
 set ARCH=x86_64
-set BOOTWAY=BIOS
+set TYPE=BIOS
+::if your architecture don't have specific type, leave it empty
+set SUBTYPE=
 
 ::--------END OF CONFIGURE----------
 
 set WORKROOT=%~dp0
+
+::set your objs here...
+set OBJS=%WORKROOT%build\head.S.s.o %WORKROOT%build\main.c.o %WORKROOT%build\print.c.o  %WORKROOT%build\init.c.o %WORKROOT%build\int.c.o %WORKROOT%build\int.asm.o
 
 mkdir build
 
