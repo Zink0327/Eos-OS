@@ -34,7 +34,7 @@
 #define io_mfence() 	__asm__ __volatile__ ("mfence	\n\t":::"memory")
 
 /* something about list processing... */
-#define NULL 0
+#include "global.h"
 
 struct List
 {

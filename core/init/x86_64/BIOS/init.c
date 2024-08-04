@@ -22,9 +22,9 @@
 
 int init(kernelconfig *conf)
 {
-    svgamodinfostruct *modinfo = (svgamodinfostruct *)(0x8200 + 0xffff800000000000);
-    
-    conf -> screen -> fbaddr = (uint8_t *)0xffff800000a00000;  // The address from 0xe0000000 was mapped to 0xffff800000a00000
+    svgamodinfostruct *modinfo = (svgamodinfostruct *)(__CORE_LINEAR_ADDR(0x8200));
+    // screen
+    conf -> screen -> fbaddr = (uint8_t *)(__CORE_LINEAR_ADDR(modinfo -> framebuffer));  // The address from 0xe0000000 was mapped to 0xffff800000a00000
     conf -> screen -> fblen = (uint32_t)(modinfo -> width * modinfo -> height * modinfo -> bpp / 8);
 
     conf -> screen -> x_res = modinfo -> width;
@@ -33,6 +33,10 @@ int init(kernelconfig *conf)
 
     conf -> screen -> x_size = 8;
     conf -> screen -> y_size = 16;
+    //interrupt
+    io_ltr(8); 	
+    set_tss64(0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00); 
 
+    int_vector_init();
     return 0;
 }

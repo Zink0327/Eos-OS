@@ -21,6 +21,28 @@
 
 .section .text
 
+#define pg_present      1
+#define pg_write        2
+#define pg_supervisor   4
+#define pg_writethrough 8
+#define pg_cachedisable 16
+#define pg_accessed     32
+#define pg_dirty        64
+#define pg_pat          128
+
+#define pg_2M_mbo          0x80
+#define pg_2M_pat          0x1000
+
+#define pg_PDE_2m_attr (pg_2M_mbo + pg_write + pg_present)
+#define pg_PML4E_attr (pg_write + pg_present)
+#define pg_PML4E_attr_s (pg_supervisor + pg_write + pg_present)
+
+#define PML4E_start_addr 0x101000
+
+#define PDP(offset) (PML4E_start_addr + offset + pg_PML4E_attr)
+#define PDP_s(offset) (PML4E_start_addr + offset + pg_PML4E_attr_s)
+#define PDE_2M(x) ((x << 21) + pg_PDE_2m_attr)
+
 .globl _start
 
 _start:
@@ -73,7 +95,7 @@ entry64:
 
 
 setup_IDT:							
-	leaq	ignore_int(%rip),	%rdx        /* set up interrupt handler (ignore_int) for all kinds of interrupt */
+	leaq	ignore_int(%rip),	%rdx        /* set up temporary interrupt handler (ignore_int) for all kinds of interrupt */
 	movq	$(0x08 << 16),	%rax
 	movw	%dx,	%ax
 	movq	$(0x8E00 << 32),	%rcx		
@@ -112,13 +134,13 @@ setup_TSS64:
 	movq	%rax,	64(%rdi)
 	shrq	$32,	%rdx
 	movq	%rdx,	72(%rdi)
-
-	mov	$0x40,	%ax
-	ltr	%ax
+//useless now
+//	mov	$0x40,	%ax
+//	ltr	%ax
 
 	movq	go_to_kernel(%rip),	%rax		/* movq address */
-	pushq	$0x08
-	pushq	%rax
+	pushq	$0x08                           /* JUMP TO */
+	pushq	%rax                            /* Start_Kernel */
 	lretq
 
 // So long, AT-T assembly!
@@ -198,38 +220,31 @@ int_msg:
 .org	0x1000
 
 __PML4E:
-
-	.quad	0x102007
+// 1 * 512GB
+	.quad PDP(0x1000)   //0x0000000000000000
 	.fill	255,8,0
-	.quad	0x102007
+	.quad PDP_s(0x1000) //0xffff800000000000
 	.fill	255,8,0
 
 .org	0x2000
 
 __PDPTE:
-	
-	.quad	0x103003
-	.fill	511,8,0
+// 4 * 1GB = 4GB
+	.quad	PDP(0x2000)
+	.quad	PDP(0x3000)
+	.quad	PDP(0x4000)
+	.quad	PDP(0x5000)
+	.fill	508,8,0
 
 .org	0x3000
 
 __PDE:
-
-	.quad	0x000083	    /*0x 000000*/
-	.quad	0x200083    /*0x 200000*/
-	.quad	0x400083
-	.quad	0x600083
-	.quad	0x800083
-	.quad	0xe0000083		/*0x a00000*/
-	.quad	0xe0200083
-	.quad	0xe0400083
-	.quad	0xe0600083
-	.quad	0xe0800083		/*0x1000000*/
-	.quad	0xe0a00083
-	.quad	0xe0c00083
-	.quad	0xe0e00083
-	.quad	0xe1000083
-	.fill	499,8,0
+// 2048 * 2MB = 4GB
+	.set i,0
+	.rept 2048
+		.quad PDE_2M(i)
+		.set i,i+1
+	.endr
 
 .section .data
 
@@ -243,7 +258,7 @@ GDT_Table:
 	.quad	0x0000f20000000000			/*4	USER	Data	64-bit	Segment	20*/
 	.quad	0x00cf9a000000ffff			/*5	KERNEL	Code	32-bit	Segment	28*/
 	.quad	0x00cf92000000ffff			/*6	KERNEL	Data	32-bit	Segment	30*/
-	.fill	10,8,0					/*8 ~ 9	TSS (jmp one segment <7>) in long-mode 128-bit 40*/
+	.fill	10,8,0					/*8 ~ 9	TSS (jmp one segment <7>) in long-mode 128-bit 40 (unused) */
 GDT_END:
 
 GDT_POINTER:

@@ -22,9 +22,11 @@
 #ifndef _X86_64_BIOS_INIT
 #define _X86_64_BIOS_INIT
 
-#define __LINEAR_ADDR(M) 
+#define __CORE_LINEAR_ADDR(M) (M + 0xffff800000000000)
 
 #include "vbe.h"
+#include "idt.h"
+#include "int.h"
 
 struct _scrnconfig {
  /* resolution */

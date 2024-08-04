@@ -41,25 +41,25 @@ void putchar_k(uint8_t* fb, uint8_t bpp, uint16_t width, int x, int y, uint32_t 
 			testval = testval >> 1;
 			if (*fontp & testval)
 			{
-				while (counter != 0)
+				while (counter < btpp)
 				{
-					inbox = (uint8_t)(FRcolor >> (8 * (counter - 1))) & 0x000000FF;
+					inbox = (uint8_t)(FRcolor >> (8 * counter)) & 0x000000FF;
 					*addr = inbox;
 					++addr;
-					counter--;
+					counter++;
 				}
 			}
 			else
 			{
-				while (counter != 0)
+				while (counter < btpp)
 				{
-					inbox = (uint8_t)(BKcolor >> (8 * (counter - 1))) & 0x000000FF;
+					inbox = (uint8_t)(BKcolor >> (8 * counter)) & 0x000000FF;
 					*addr = inbox;
 					++addr;
-					counter--;
+					counter++;
 				}
 			}
-			counter = btpp;
+			counter = 0;
 		}
 		fontp++;
 	}
@@ -75,13 +75,13 @@ int atoi_k(const char** s)
 	return i;
 }
 
-static char* itoa_k(char* str, long num, int size, int base, int precision, int type)
+char* itoa_k(char* str, long num, int size, int base, int precision, int type)
 {
 
-	char n = 0, c = 0, sign = 0, tmp[64] = { 0 };
+	char c = 0, sign = 0, tmp[64] = { 0 };
 
 	/* counter */
-	int i = 0;
+	int i = 0, offset = size, n = 0;
 
 	const char* digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -113,7 +113,7 @@ static char* itoa_k(char* str, long num, int size, int base, int precision, int 
 	/* the sign will take up one bit of width */
 	if (sign)
 	{
-		size--;
+		offset--;
 	}
 
 	/* check if the base is 8 or 16 and do pre-processing */
@@ -121,11 +121,11 @@ static char* itoa_k(char* str, long num, int size, int base, int precision, int 
 	{
 		if (base == 16)
 		{
-			size -= 2;
+			offset -= 2;
 		}
 		else if (base == 8)
 		{
-			size--;
+			offset--;
 		}
 	}
 
@@ -164,12 +164,12 @@ static char* itoa_k(char* str, long num, int size, int base, int precision, int 
 	{
 		precision = i;
 	}
-	size -= precision;
+	offset -= precision;
 
 	/* write number data into the string */
 	if (!(type & (ZEROPAD + LEFT))) /* neither "fill with zero" nor "left justified" */
 	{
-		while (size-- > 0)
+		while (offset-- > 0)
 		{
 			*str = ' ';
 			++str;
@@ -202,7 +202,7 @@ static char* itoa_k(char* str, long num, int size, int base, int precision, int 
 
 	if (!(type & LEFT))
 	{
-		while (size-- > 0)
+		while (offset-- > 0)
 		{
 			*str = c;
 			++str;
@@ -221,7 +221,7 @@ static char* itoa_k(char* str, long num, int size, int base, int precision, int 
 		++str;
 	}
 	/* fill in with space to the specified width */
-	while (size-- > 0)
+	while (offset-- > 0)
 	{
 		*str = ' ';
 		++str;
@@ -385,6 +385,14 @@ int vsprintf_k(char* buf, const char* fmt, va_list args)
 			}
 			break;
 
+		case 'b':
+
+			if (qualifier == 'l')
+				str = itoa_k(str, va_arg(args, unsigned long), field_width, 2, precision, flags);
+			else
+				str = itoa_k(str, va_arg(args, unsigned int), field_width, 2, precision, flags);
+			break;
+
 		case 'o':
 
 			if (qualifier == 'l')
@@ -472,6 +480,11 @@ int print(uint32_t fcolor, uint32_t bcolor, const char* _Format, ...)
 	int32_t i = 0, count = 0, line = 0;
 	uint8_t ifnbt = 0;
 	va_list args;
+	if (backupscrn.y_size <= 0 || backupscrn.x_size <= 0)
+	{
+		return -1;
+	}
+	
 	va_start(args, _Format);
 
 	i = vsprintf_k(tmpbuf, _Format, args);

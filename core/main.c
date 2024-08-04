@@ -28,26 +28,20 @@ void SystemCollapsed()
 }
 
 
-int Start_Kernel(kernelconfig config)
+
+
+int Start_Kernel(kernelconfig *config)
 {
     kernelconfig osconf;
 
     //  init everything if necessary
     init(&osconf);  //defined at ./global.h
-    backupscrn.fbaddr = osconf.screen->fbaddr;
-    backupscrn.fblen = osconf.screen->fblen;
-    backupscrn.x_res = osconf.screen->x_res;
-    backupscrn.y_res = osconf.screen->y_res;
-    backupscrn.bpp = osconf.screen->bpp;
-    backupscrn.x_size = osconf.screen->x_size;
-    backupscrn.y_size = osconf.screen->y_size;
+    print_init(backupscrn,osconf)
 
-    int i=0x500;
+    long i=0xABCDEF;
 
-    print(WHITE,BLACK,"Hello world! %#x", i);
-    
-    i = 1/0;
-
+    print(WHITE,BLACK,"Hello world\nabc %064lb,%#018lx \n",i,i);
+    i = *(long *)0xffff888800000000;
     //  load and start the "real" kernel
     
 

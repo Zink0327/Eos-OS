@@ -28,6 +28,15 @@
 #include "global.h"
 
 #define is_digit(c) ((c) >= '0' && (c) <= '9')
+#define print_init(dst,src) \
+    dst.fbaddr = src.screen->fbaddr;\
+    dst.fblen = src.screen->fblen;\
+    dst.x_res = src.screen->x_res;\
+    dst.y_res = src.screen->y_res;\
+    dst.bpp = src.screen->bpp;\
+    dst.x_size = src.screen->x_size;\
+    dst.y_size = src.screen->y_size;
+
 
 /* some token used by itoa_k() */
 #define ZEROPAD	1		/* fill the rest with zero            00000001*/
@@ -84,7 +93,7 @@ void putchar_k(
 int atoi_k(const char **s);
 
 /* transfer number to string */
-static char * itoa_k(
+char * itoa_k(
     char * str,         /* address to place the transfered number */
     long num,           /* number to be transfered */
     int size,           /* length of the number in string */

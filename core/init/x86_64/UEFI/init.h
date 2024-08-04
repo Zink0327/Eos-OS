@@ -1,5 +1,5 @@
-/*----------EOS global definition----------
-    File name:global.h
+/*----------EOS kernel initial function for UEFI----------
+    File name:UEFI/init.h
 
     Copyright (C) 2023 by Zink
     This file is part of EOS
@@ -19,28 +19,35 @@
 
 */
 
-/* this file should be generated according to compiler and machine */
+#ifndef _X86_64_UEFI_INIT
+#define _X86_64_UEFI_INIT
 
-#ifndef __GLOBAL_H__
-#define __GLOBAL_H__
+struct _scrnconfig {
+ /* resolution */
+	uint32_t x_res;
+	uint32_t y_res;
+    uint8_t bpp;
+	
+	/* size */
+	uint32_t x_size;
+	uint32_t y_size;
+ /* frame buffer and length */
+    uint32_t *fbaddr;
+    uint64_t fblen;
 
-#include "linkage.h"
+};
 
-#define NULL 0
+typedef struct _scrnconfig scrnconfig;
 
-typedef unsigned char uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned int uint32_t;
-typedef unsigned long uint64_t;
+struct _KernelConfig {
+    scrnconfig *screen;
 
-typedef char int8_t;
-typedef short int16_t;
-typedef int int32_t;
-typedef long int64_t;
+ 
+};
 
-typedef uint64_t QWORD;
-typedef uint32_t DWORD;
-typedef uint16_t WORD;
-typedef uint8_t BYTE;
+typedef struct _KernelConfig kernelconfig;
+
+
+int init(kernelconfig *conf); /* main function */
 
 #endif

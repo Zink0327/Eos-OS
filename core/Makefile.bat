@@ -22,68 +22,69 @@ echo entering directory %~dp0
 if "%1" equ "clean" (goto clean) else (goto build)
 
 :build
-copy %~dp0init\%ARCH%\%BOOTWAY%\* %~dp0
+copy %~dp0init\%ARCH%\%TYPE%\%SUBTYPE%\* %~dp0
 copy %~dp0init\%ARCH%\* %~dp0
 
 if exist %WORKROOT%tools\gcc\bin\%CC% (
-echo %WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64 -c %~dp0print.c -o %WORKROOT%build\print.o -fno-stack-protector
-%WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64 -c %~dp0print.c -o %WORKROOT%build\print.o -fno-stack-protector
-
-if not exist %WORKROOT%build\print.o (
+dir %~dp0*.c /b > cfile.txt
+::although the file names of output files might be a little bit ugly, but I've tried my best
+for /f %%m in (cfile.txt) do (
+echo %WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64 -c %~dp0%%m -o %WORKROOT%build\%%m.o -fno-stack-protector
+%WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64 -c %~dp0%%m -o %WORKROOT%build\%%m.o -fno-stack-protector
+if not exist %WORKROOT%build\%%m.o (
 set ERRFLAG="1"
-echo error in compiling print.c!
+echo error in compiling %%m!
 goto end
 )
-echo %WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64 -c %~dp0main.c -o %WORKROOT%build\main.o -fno-stack-protector
-%WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64  -c %~dp0main.c -o %WORKROOT%build\main.o -fno-stack-protector
-
-if not exist %WORKROOT%build\main.o (
+)
+del cfile.txt /q
+dir %~dp0*.S /b > sfile.txt
+for /f %%m in (sfile.txt) do (
+echo %WORKROOT%tools\gcc\bin\%CC% -E  %~dp0%%m > %WORKROOT%build\%%m.s
+%WORKROOT%tools\gcc\bin\%CC% -E  %~dp0%%m > %WORKROOT%build\%%m.s
+if not exist %WORKROOT%build\%%m.s (
 set ERRFLAG="1"
-echo error in compiling main.c!
+echo error in compiling %%m!
 goto end
 )
-
-echo %WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64 -c %~dp0init.c -o %WORKROOT%build\init.o -fno-stack-protector
-%WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64 -c %~dp0init.c -o %WORKROOT%build\init.o -fno-stack-protector
-
-if not exist %WORKROOT%build\init.o (
-set ERRFLAG="1"
-echo error in compiling init.c!
-goto end
 )
-
-echo %WORKROOT%tools\gcc\bin\%CC% -E  %~dp0head.S > %WORKROOT%build\head.s
-%WORKROOT%tools\gcc\bin\%CC% -E  %~dp0head.S > %WORKROOT%build\head.s
-
-if not exist %WORKROOT%build\head.s (
-set ERRFLAG="1"
-echo error in generating head.S!
-goto end
-)
-:: add the assembly generating code for better debugging...
-echo %WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64 -S %~dp0print.c -o %WORKROOT%build\print.s -fno-stack-protector
-%WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64 -S %~dp0print.c -o %WORKROOT%build\print.s -fno-stack-protector
-
-echo %WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64 -S %~dp0main.c -o %WORKROOT%build\main.s -fno-stack-protector
-%WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64 -S %~dp0main.c -o %WORKROOT%build\main.s -fno-stack-protector
-
-echo %WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64 -S %~dp0init.c -o %WORKROOT%build\init.s -fno-stack-protector
-%WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64 -S %~dp0init.c -o %WORKROOT%build\init.s -fno-stack-protector
+del sfile.txt /q
 ) else (
 set ERRFLAG="1"
 echo FATAL ERROR: %WORKROOT%tools\gcc\bin\%CC% not found!
 goto end
 )
 
-if exist %WORKROOT%tools\gcc\bin\%AS% (
-echo %WORKROOT%tools\gcc\bin\%AS% --64 %WORKROOT%build\head.s -o %WORKROOT%build\head.o
-%WORKROOT%tools\gcc\bin\%AS% --64 %WORKROOT%build\head.s -o %WORKROOT%build\head.o
-
-if not exist %WORKROOT%build\head.o (
+if exist %WORKROOT%tools\nasm\nasm.exe (
+dir %~dp0*.asm /b > asfile.txt
+for /f %%m in (asfile.txt) do (
+echo %WORKROOT%tools\nasm\nasm.exe -f elf64 %~dp0%%m -o %WORKROOT%build\%%m.o
+%WORKROOT%tools\nasm\nasm.exe -f elf64 %~dp0%%m -o %WORKROOT%build\%%m.o
+if not exist %WORKROOT%build\%%m.o (
 set ERRFLAG="1"
-echo error in compiling head.s!
+echo error in compiling %%m!
 goto end
 )
+)
+del asfile.txt /q
+) else (
+set ERRFLAG="1"
+echo FATAL ERROR: %WORKROOT%tools\nasm\nasm.exe not found!
+goto end
+)
+
+if exist %WORKROOT%tools\gcc\bin\%AS% (
+dir %WORKROOT%build\*.s /b > ssfile.txt
+for /f %%m in (ssfile.txt) do (
+echo %WORKROOT%tools\gcc\bin\%AS% --64 %WORKROOT%build\%%m -o %WORKROOT%build\%%m.o
+%WORKROOT%tools\gcc\bin\%AS% --64 %WORKROOT%build\%%m -o %WORKROOT%build\%%m.o
+if not exist %WORKROOT%build\%%m.o (
+set ERRFLAG="1"
+echo error in compiling %%m!
+goto end
+)
+)
+del ssfile.txt /q
 ) else (
 set ERRFLAG="1"
 echo FATAL ERROR: %WORKROOT%tools\gcc\bin\%AS% not found!
@@ -92,8 +93,8 @@ goto end
 
 
 if exist %WORKROOT%tools\gcc\bin\%LD% (
-echo %WORKROOT%tools\gcc\bin\%LD% -b %LDLINKFMT% -z muldefs -o %WORKROOT%build\kernel.elf %WORKROOT%build\head.o %WORKROOT%build\main.o %WORKROOT%build\print.o %WORKROOT%build\init.o  -T %~dp0linkkernel.lds 
-%WORKROOT%tools\gcc\bin\%LD% -b %LDLINKFMT% -z muldefs -o %WORKROOT%build\kernel.elf %WORKROOT%build\head.o %WORKROOT%build\main.o %WORKROOT%build\print.o  %WORKROOT%build\init.o -T %~dp0linkkernel.lds 
+echo %WORKROOT%tools\gcc\bin\%LD% -b %LDLINKFMT% -z muldefs -o %WORKROOT%build\kernel.elf  %OBJS% -T %~dp0linkkernel.lds 
+%WORKROOT%tools\gcc\bin\%LD% -b %LDLINKFMT% -z muldefs -o %WORKROOT%build\kernel.elf %OBJS% -T %~dp0linkkernel.lds 
 
 if not exist %WORKROOT%build\kernel.elf (
 set ERRFLAG="1"
@@ -123,11 +124,10 @@ goto end
 )
 
 :clean 
-dir %~dp0init\%ARCH%\%BOOTWAY%\ /b > initfl.txt
-dir %~dp0init\%ARCH%\ /b > init2fl.txt
+dir %~dp0init\%ARCH%\%TYPE%\%SUBTYPE%\ /b > initfl.txt
+dir %~dp0init\%ARCH%\ /b >> initfl.txt
 
 for /f %%i in (initfl.txt) do del %~dp0%%i /q
-for /f %%i in (init2fl.txt) do del %~dp0%%i /q
 
 del initfl.txt /q
 goto end
