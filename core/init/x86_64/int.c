@@ -222,7 +222,7 @@ void general_protection_handler(uint64_t RSP, uint64_t errcode)
 {
     uint64_t *p = NULL;
     p = (uint64_t *)(RSP + 0x98);
-    print(RED, BLACK, "[FAULT ] General Protection (#GP) with errcode(binary):%#064lb, RIP:%#018lx and RSP:%#018lx \n", errcode, *p, RSP);
+    print(RED, BLACK, "[FAULT ] General Protection (#GP) with errcode(binary):%#064lb, RIP:%#018x and RSP:%#018x \n", errcode, *p, RSP);
     do
     {
         if(errcode & 0x01)

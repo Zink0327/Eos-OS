@@ -22,6 +22,7 @@
 #ifndef _EOS_X86_64_TYPEDEF
 #define _EOS_X86_64_TYPEDEF
 
+#define __CORE_LINEAR_ADDR(M) (M + 0xffff800000000000)
 #include "global.h"
 
 #endif

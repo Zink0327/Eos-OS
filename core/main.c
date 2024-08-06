@@ -41,7 +41,7 @@ int Start_Kernel(kernelconfig *config)
     long i=0xABCDEF;
 
     print(WHITE,BLACK,"Hello world\nabc %064lb,%#018lx \n",i,i);
-    i = *(long *)0xffff888800000000;
+    init2(&osconf);
     //  load and start the "real" kernel
     
 

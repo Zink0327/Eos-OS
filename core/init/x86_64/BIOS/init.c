@@ -40,3 +40,9 @@ int init(kernelconfig *conf)
     int_vector_init();
     return 0;
 }
+
+int init2(kernelconfig *conf)
+{
+	init_memory();
+	return 0;
+}

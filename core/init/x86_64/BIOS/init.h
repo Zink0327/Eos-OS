@@ -22,11 +22,13 @@
 #ifndef _X86_64_BIOS_INIT
 #define _X86_64_BIOS_INIT
 
-#define __CORE_LINEAR_ADDR(M) (M + 0xffff800000000000)
+
 
 #include "vbe.h"
 #include "idt.h"
 #include "int.h"
+
+#include "memory.h"
 
 struct _scrnconfig {
  /* resolution */
@@ -55,5 +57,5 @@ typedef struct _KernelConfig kernelconfig;
 
 
 int init(kernelconfig *conf); /* main function */
-
+int init2(kernelconfig *conf);
 #endif

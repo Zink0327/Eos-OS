@@ -388,17 +388,17 @@ int vsprintf_k(char* buf, const char* fmt, va_list args)
 		case 'b':
 
 			if (qualifier == 'l')
-				str = itoa_k(str, va_arg(args, unsigned long), field_width, 2, precision, flags);
+				str = itoa_k(str, va_arg(args, uint64_t), field_width, 2, precision, flags);
 			else
-				str = itoa_k(str, va_arg(args, unsigned int), field_width, 2, precision, flags);
+				str = itoa_k(str, va_arg(args, uint32_t), field_width, 2, precision, flags);
 			break;
 
 		case 'o':
 
 			if (qualifier == 'l')
-				str = itoa_k(str, va_arg(args, unsigned long), field_width, 8, precision, flags);
+				str = itoa_k(str, va_arg(args, uint64_t), field_width, 8, precision, flags);
 			else
-				str = itoa_k(str, va_arg(args, unsigned int), field_width, 8, precision, flags);
+				str = itoa_k(str, va_arg(args, uint32_t), field_width, 8, precision, flags);
 			break;
 
 		case 'p':
@@ -409,7 +409,7 @@ int vsprintf_k(char* buf, const char* fmt, va_list args)
 				flags |= ZEROPAD;
 			}
 
-			str = itoa_k(str, (unsigned long)va_arg(args, void*), field_width, 16, precision, flags);
+			str = itoa_k(str, (uint64_t)va_arg(args, void*), field_width, 16, precision, flags);
 			break;
 
 		case 'x':
@@ -419,9 +419,9 @@ int vsprintf_k(char* buf, const char* fmt, va_list args)
 		case 'X':
 
 			if (qualifier == 'l')
-				str = itoa_k(str, va_arg(args, unsigned long), field_width, 16, precision, flags);
+				str = itoa_k(str, va_arg(args, int64_t), field_width, 16, precision, flags);
 			else
-				str = itoa_k(str, va_arg(args, unsigned int), field_width, 16, precision, flags);
+				str = itoa_k(str, va_arg(args, int32_t), field_width, 16, precision, flags);
 			break;
 
 		case 'd':
@@ -431,9 +431,9 @@ int vsprintf_k(char* buf, const char* fmt, va_list args)
 		case 'u':
 
 			if (qualifier == 'l')
-				str = itoa_k(str, va_arg(args, unsigned long), field_width, 10, precision, flags);
+				str = itoa_k(str, va_arg(args, int64_t), field_width, 10, precision, flags);
 			else
-				str = itoa_k(str, va_arg(args, unsigned int), field_width, 10, precision, flags);
+				str = itoa_k(str, va_arg(args, int32_t), field_width, 10, precision, flags);
 			break;
 
 		case 'n':
