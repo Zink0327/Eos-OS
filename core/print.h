@@ -29,13 +29,13 @@
 
 #define is_digit(c) ((c) >= '0' && (c) <= '9')
 #define print_init(dst,src) \
-    dst.fbaddr = src.screen->fbaddr;\
-    dst.fblen = src.screen->fblen;\
-    dst.x_res = src.screen->x_res;\
-    dst.y_res = src.screen->y_res;\
-    dst.bpp = src.screen->bpp;\
-    dst.x_size = src.screen->x_size;\
-    dst.y_size = src.screen->y_size;
+    dst.fbaddr = src.screen.fbaddr;\
+    dst.fblen = src.screen.fblen;\
+    dst.x_res = src.screen.x_res;\
+    dst.y_res = src.screen.y_res;\
+    dst.bpp = src.screen.bpp;\
+    dst.x_size = src.screen.x_size;\
+    dst.y_size = src.screen.y_size;
 
 
 /* some token used by itoa_k() */

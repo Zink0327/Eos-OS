@@ -222,7 +222,7 @@ void general_protection_handler(uint64_t RSP, uint64_t errcode)
 {
     uint64_t *p = NULL;
     p = (uint64_t *)(RSP + 0x98);
-    print(RED, BLACK, "[FAULT ] General Protection (#GP) with errcode(binary):%#064lb, RIP:%#018x and RSP:%#018x \n", errcode, *p, RSP);
+    print(RED, BLACK, "[FAULT ] General Protection (#GP) with errcode(binary):%#064lb, RIP:%#018x and RSP:%#018x \n", errcode, (uint64_t)*p, (uint64_t)RSP);
     do
     {
         if(errcode & 0x01)
@@ -245,8 +245,18 @@ void general_protection_handler(uint64_t RSP, uint64_t errcode)
             break;
         }
     } while (0);
-    
     print(YELLOW, BLACK, "No.: %#010d \n", (errcode >> 3) & 0xfff);
+
+    print(YELLOW, BLACK, "\nCurrent code dump (+8 <- -8):%016lx %016lx \nStack:\n", (uint64_t)*(uint64_t *)(*p),(uint64_t)*(uint64_t *)(*p - 8), (uint64_t)*(uint64_t *)RSP,(uint64_t)*(uint64_t *)(RSP + 8));
+    do
+    {
+        print(YELLOW, BLACK, "%#018x > %08x%08x %08x%08x", RSP, (uint32_t)*(uint32_t *)RSP, (uint32_t)*(uint32_t *)(RSP + 4), (uint32_t)*(uint32_t *)(RSP + 8), (uint32_t)*(uint32_t *)(RSP + 12));
+        RSP += 16;
+        print(YELLOW, BLACK, " %08x%08x %08x%08x\n", RSP, (uint32_t)*(uint32_t *)RSP, (uint32_t)*(uint32_t *)(RSP + 4), (uint32_t)*(uint32_t *)(RSP + 8), (uint32_t)*(uint32_t *)(RSP + 12));
+        RSP += 16;
+    }while ((uint32_t)RSP < 0x7c00);
+    
+
     while(1)
         io_hlt()
 }

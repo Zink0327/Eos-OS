@@ -1,5 +1,5 @@
-/*----------EOS kernel entry include file----------
-    File name:main.h
+/*----------EOS kernel initial function for BIOS----------
+    File name:BIOS/init.h
 
     Copyright (C) 2023 by Zink
     This file is part of EOS
@@ -18,12 +18,41 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 */
-#ifndef _EOS_MAIN_H_
-#define _EOS_MAIN_H_
+// this file is the template of the initialize part of the EOS core.
 
-#include "print.h"
-//#include "memblk.h"
-#include "init.h"
+#ifndef _XXX_INIT
+#define _XXX_INIT
 
 
+
+#include "memory.h"
+
+struct _scrnconfig {
+ /* resolution */
+	uint16_t x_res;
+	uint16_t y_res;
+    uint8_t bpp;
+	
+	/* size */
+	uint16_t x_size;
+	uint16_t y_size;
+ /* frame buffer and length */
+    uint8_t *fbaddr;
+    uint64_t fblen;
+
+};
+
+typedef struct _scrnconfig scrnconfig;
+
+
+struct _KernelConfig {
+    scrnconfig screen;
+    memconfig memory;
+};
+
+typedef struct _KernelConfig kernelconfig;
+
+
+int init(kernelconfig *conf); /* main function */
+int init2(kernelconfig *conf);
 #endif

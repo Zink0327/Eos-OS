@@ -84,7 +84,7 @@ do                                                                    \
     : "c"(ist) ,                                                     \
       [attrb] "i"(attr << 8) ,                                       \
       "2"(0x8 << 16) ,/* it is supposed to be loaded to RAX */       \
-      "3"(((uint32_t *)(handleraddr)))      /* ...and RDX */         \
+      "3"(((uint64_t *)(handleraddr)))      /* ...and RDX */         \
     : "memory"                                                       \
     );                                                               \
 } while (0)

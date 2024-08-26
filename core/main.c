@@ -38,10 +38,19 @@ int Start_Kernel(kernelconfig *config)
     init(&osconf);  //defined at ./global.h
     print_init(backupscrn,osconf)
 
-    long i=0xABCDEF;
+    long i=0xffff800000001000;
 
-    print(WHITE,BLACK,"Hello world\nabc %064lb,%#018lx \n",i,i);
+    print(WHITE,BLACK,"Hello world\nabc %#018lx \n",i,i);
+
+//    gmd.code_start = (uint64_t)& _text;
+//    gmd.code_end   = (uint64_t)& _etext;
+//    gmd.data_end   = (uint64_t)& _edata;
+//    gmd.eoc        = (uint64_t)& _end;
+
     init2(&osconf);
+
+//    memset((void *)__CORE_LINEAR_ADDR(0x200000),0xc0,256);
+
     //  load and start the "real" kernel
     
 

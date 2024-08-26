@@ -1,5 +1,5 @@
-/*----------EOS kernel entry include file----------
-    File name:main.h
+/*----------EOS kernel link script----------
+    File name:linkkernel.lds
 
     Copyright (C) 2023 by Zink
     This file is part of EOS
@@ -18,12 +18,44 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 */
-#ifndef _EOS_MAIN_H_
-#define _EOS_MAIN_H_
+// this file is the template of the initialize part of the EOS core.
 
-#include "print.h"
-//#include "memblk.h"
-#include "init.h"
+OUTPUT_FORMAT("elf64-xxx","elf64-xxx","elf64-xxx")
+OUTPUT_ARCH(xxx:xxx)
+ENTRY(_start)
+SECTIONS
+{
 
+	. = xlinearxaddressxstartx + xrealxcorexaddressx;
+	.text :
+	{
+		_text = .;
+		*(.text)
+		_etext = .;
+	}
 
-#endif
+	. = ALIGN(8);
+
+	.data :
+	{
+		_data = .;
+		*(.data)		
+		_edata = .;
+	}
+
+	.rodata : 
+	{
+		_rodata = .;	
+		*(.rodata)
+		_erodata = .;
+	}
+
+	.bss :
+	{
+		_bss = .;
+		*(.bss)
+		_ebss = .;
+	}
+
+	_end = .;
+}

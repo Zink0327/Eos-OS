@@ -47,10 +47,10 @@ struct _scrnconfig {
 
 typedef struct _scrnconfig scrnconfig;
 
-struct _KernelConfig {
-    scrnconfig *screen;
 
- 
+struct _KernelConfig {
+    scrnconfig screen;
+    memconfig memory;
 };
 
 typedef struct _KernelConfig kernelconfig;

@@ -91,7 +91,7 @@ entry64:
 	movq	%rax,	%es
 	movq	%rax,	%gs
 	movq	%rax,	%ss
-	movq	$0xffff800000007E00,	%rsp		/* rsp address */
+	movq	$0xffff800000007C00,	%rsp		/* rsp address */
 
 
 setup_IDT:							

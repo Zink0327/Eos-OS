@@ -1,7 +1,7 @@
 /*----------EOS memory processing module for BIOS----------
     File name:memory.c
 
-    Copyright (C) 2023 by Zink
+    Copyright (C) 2024 by Zink
     This file is part of EOS
 
     EOS is free software: you can redistribute it and/or modify
@@ -21,43 +21,72 @@
 
 #include "memory.h"
 
-void init_memory()
+void init_memory(memconfig *conf)
 {
-    int32_t i;
     uint64_t total = 0;
+
+    conf -> counts = 0;
     memstruct *p = (memstruct *)__CORE_LINEAR_ADDR(0x7e00);
-    for (i = 0; i < 32; i++)
+    uint16_t count = 0;
+    for (int16_t i = 0; i < 32; i++)
     {
+        if(p->Type > 4 || p->Type <= 0)
+            break;
+        
+        conf->blocks[count].addr = p -> BaseAddr;
+        conf->blocks[count].type = p -> Type;
         switch(p -> Type)
         {
             case 1:
             
                 print(INDIGO, BLACK, "Memory block No.%d Length:%016d, Address: %#018x, Type: RAM(%05d)\n", i, p -> Length, p -> BaseAddr, p -> Type);
-                total += p->Length;
+                
+                conf->blocks[count].size = 2048;  //the memory page is 2M aligned
+
+                /* count the memory block's length */
+                uint64_t end = PAGE_2M_SHL(PAGE_2M_SHR(conf->blocks[count].addr + p -> Length));
+                uint64_t start = PAGE_2M_ALIGN(conf->blocks[count].addr);
+
+                if (end > start)
+                {  /* if the length is valid, record it. */
+                    conf->blocks[count].len = PAGE_2M_SHR(end - start);
+                    total += PAGE_2M_SHR(end - start);
+                }
+                else
+                {  /* Or just ignore the memory block... */
+                    count--;
+                    conf->counts--;
+                }
+                
                 break;
             
             case 2:
             
                 print(INDIGO, BLACK, "Memory block No.%d Length:%016d, Address: %#018x, Type: ROM/RESERVED(%05d)\n", i, p -> Length, p -> BaseAddr, p -> Type);
+                conf->blocks[count].len = (p->Length / 1024);
+                conf->blocks[count].size = 1;
                 break;
             
             case 3:
             
                 print(INDIGO, BLACK, "Memory block No.%d Length:%016d, Address: %#018x, Type: ACPI Reclaim Memory(%05d)\n", i, p -> Length, p -> BaseAddr, p -> Type);
+                conf->blocks[count].len = (p->Length / 1024);
+                conf->blocks[count].size = 1;
                 break;
             
             case 4:
             
                 print(INDIGO, BLACK, "Memory block No.%d Length:%016d, Address: %#018x, Type: ACPI NVS Memory(%05d)\n", i, p -> Length, p -> BaseAddr, p -> Type);
+                conf->blocks[count].len = (p->Length / 1024);
+                conf->blocks[count].size = 1;
                 break;
-            
-            default:
-            
-                print(INDIGO, BLACK, "Memory block No.%d Length:%016d, Address: %#018x, Type: Unknown(%05d)\n", i, p -> Length, p -> BaseAddr, p -> Type);
-                break;
+
         };
-         p++;
+
+        count++;
+        conf->counts++;
+        p++;
     }
-    print(INDIGO, BLACK, "Total RAM memory: %#018lx", total);
+    print(INDIGO, BLACK, "Total Available Page Count: %#d", total);
     
 }

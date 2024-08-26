@@ -81,13 +81,14 @@ char* itoa_k(char* str, long num, int size, int base, int precision, int type)
 	char c = 0, sign = 0, tmp[64] = { 0 };
 
 	/* counter */
-	int i = 0, offset = size, n = 0;
+	int i = 0, offset = size;
+	unsigned int n = 0;
 
 	const char* digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 	if (type & LOWERCASE)
 	{
-		digits = "0123456789abcdefghijklmnopqrstuvwxyz";
+		digits = "0123456789abcdefghijklmnopqrstuvwxyz";  /* that doesn't cause an error, what a surprise... */
 	}
 
 	if (type & LEFT) type &= ~ZEROPAD;
@@ -137,9 +138,10 @@ char* itoa_k(char* str, long num, int size, int base, int precision, int type)
 	}
 	else
 	{
-		while (num != 0)
+		unsigned long nnn = num;
+		while (nnn != 0)
 		{
-			n = num % base;
+			n = nnn % base;
 			tmp[i++] = digits[n];
 /*   to calculate 23 based 10 to base 2, for example
 						 ^
@@ -154,9 +156,9 @@ char* itoa_k(char* str, long num, int size, int base, int precision, int type)
 
 	  but in tmp[], the digits are as below:
 			 { 1 , 1 , 1 , 0 , 1 }
-	  As you see, the digits are backward, so we have to adjust the order of the digits later.
+	  As you see, the digits are backward, so we have to reverse the digits later.
 */
-			num = (num - n) / base;
+			nnn = (nnn - n) / base;
 		}
 	}
 
@@ -419,9 +421,9 @@ int vsprintf_k(char* buf, const char* fmt, va_list args)
 		case 'X':
 
 			if (qualifier == 'l')
-				str = itoa_k(str, va_arg(args, int64_t), field_width, 16, precision, flags);
+				str = itoa_k(str, (uint64_t)va_arg(args, uint64_t), field_width, 16, precision, flags);
 			else
-				str = itoa_k(str, va_arg(args, int32_t), field_width, 16, precision, flags);
+				str = itoa_k(str, (uint64_t)va_arg(args, uint32_t), field_width, 16, precision, flags);
 			break;
 
 		case 'd':

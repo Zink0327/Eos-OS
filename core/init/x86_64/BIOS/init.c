@@ -24,15 +24,15 @@ int init(kernelconfig *conf)
 {
     svgamodinfostruct *modinfo = (svgamodinfostruct *)(__CORE_LINEAR_ADDR(0x8200));
     // screen
-    conf -> screen -> fbaddr = (uint8_t *)(__CORE_LINEAR_ADDR(modinfo -> framebuffer));  // The address from 0xe0000000 was mapped to 0xffff800000a00000
-    conf -> screen -> fblen = (uint32_t)(modinfo -> width * modinfo -> height * modinfo -> bpp / 8);
+    conf -> screen . fbaddr = (uint8_t *)(__CORE_LINEAR_ADDR(modinfo -> framebuffer));
+    conf -> screen . fblen = (uint32_t)(modinfo -> width * modinfo -> height * modinfo -> bpp / 8);
 
-    conf -> screen -> x_res = modinfo -> width;
-    conf -> screen -> y_res = modinfo -> height;
-    conf -> screen -> bpp = modinfo -> bpp;
+    conf -> screen . x_res = modinfo -> width;
+    conf -> screen . y_res = modinfo -> height;
+    conf -> screen . bpp = modinfo -> bpp;
 
-    conf -> screen -> x_size = 8;
-    conf -> screen -> y_size = 16;
+    conf -> screen . x_size = 8;
+    conf -> screen . y_size = 16;
     //interrupt
     io_ltr(8); 	
     set_tss64(0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00); 
@@ -43,6 +43,21 @@ int init(kernelconfig *conf)
 
 int init2(kernelconfig *conf)
 {
-	init_memory();
+    for (uint16_t i = 0; i < 32; ++i)
+    {
+        conf->memory.blocks[i].addr = 0;
+        conf->memory.blocks[i].len = 0;
+        conf->memory.blocks[i].type = 0;
+        conf->memory.blocks[i].size = 0;
+    }
+    
+	init_memory(&conf->memory);
+        
+    print(WHITE, BLACK, "\nFetched Memory Block: Address               Length              Type              Size(Kbyte) \n");
+    for (uint16_t i = 0; i < conf->memory.counts; i++)
+    {
+        print(WHITE, BLACK, "Memory Block No.%d, %#018x, %#018d, %#018d, %#018d\n", i, conf->memory.blocks[i].addr, conf->memory.blocks[i].len, conf->memory.blocks[i].type, conf->memory.blocks[i].size);
+    }
+    
 	return 0;
 }

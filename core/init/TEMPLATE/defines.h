@@ -1,7 +1,7 @@
-/*----------EOS kernel entry include file----------
-    File name:main.h
+/*----------EOS kernel initial function for xxx----------
+    File name:init.h
 
-    Copyright (C) 2023 by Zink
+    Copyright (C) 20xx by xxx
     This file is part of EOS
 
     EOS is free software: you can redistribute it and/or modify
@@ -18,12 +18,12 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 */
-#ifndef _EOS_MAIN_H_
-#define _EOS_MAIN_H_
+// this file is the template of the initialize part of the EOS core.
 
-#include "print.h"
-//#include "memblk.h"
-#include "init.h"
+#ifndef _EOS_XXX_TYPEDEF
+#define _EOS_XXX_TYPEDEF
 
+#define __CORE_LINEAR_ADDR(M) xxx
+#include "global.h"
 
 #endif
