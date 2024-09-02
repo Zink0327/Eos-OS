@@ -20,6 +20,48 @@
 */
 #include "init.h"
 
+void putchar_framebuffer(uint8_t* fb, uint8_t bpp, uint16_t width, int x, int y, uint32_t FRcolor, uint32_t BKcolor, uint8_t fontn)
+{
+	if (fb == NULL || bpp == 0 || (bpp % 8) != 0)
+		return;
+
+	int i = 0, j = 0, testval = 0, btpp = bpp / 8, counter = btpp;
+	uint8_t* addr = NULL, * fontp = font[fontn], inbox = 0;
+
+	for (i = 0; i < 16; i++)
+	{
+		addr = (uint8_t*)(fb + (width * (y + i) + x) * btpp);
+		testval = 0x100;
+		for (j = 0; j < 8; j++)
+		{
+			testval = testval >> 1;
+			if (*fontp & testval)
+			{
+				while (counter < btpp)
+				{
+					inbox = (uint8_t)(FRcolor >> (8 * counter)) & 0x000000FF;
+					*addr = inbox;
+					++addr;
+					counter++;
+				}
+			}
+			else
+			{
+				while (counter < btpp)
+				{
+					inbox = (uint8_t)(BKcolor >> (8 * counter)) & 0x000000FF;
+					*addr = inbox;
+					++addr;
+					counter++;
+				}
+			}
+			counter = 0;
+		}
+		fontp++;
+	}
+
+}
+
 int init(kernelconfig *conf)
 {
     svgamodinfostruct *modinfo = (svgamodinfostruct *)(__CORE_LINEAR_ADDR(0x8200));
@@ -33,6 +75,7 @@ int init(kernelconfig *conf)
 
     conf -> screen . x_size = 8;
     conf -> screen . y_size = 16;
+    conf -> screen . putchar_k = putchar_framebuffer;
     //interrupt
     io_ltr(8); 	
     set_tss64(0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00); 

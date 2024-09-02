@@ -88,5 +88,5 @@ void init_memory(memconfig *conf)
         p++;
     }
     print(INDIGO, BLACK, "Total Available Page Count: %#d", total);
-    
+    conf->ramcounts = total;
 }

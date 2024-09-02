@@ -42,7 +42,7 @@ struct _scrnconfig {
  /* frame buffer and length */
     uint8_t *fbaddr;
     uint64_t fblen;
-
+    void (*putchar_k)(uint8_t*, uint8_t, uint16_t, int, int, uint32_t, uint32_t, uint8_t);
 };
 
 typedef struct _scrnconfig scrnconfig;
