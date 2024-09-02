@@ -24,48 +24,6 @@
 extern inline int strlen(char* String);
 
 
-void putchar_k(uint8_t* fb, uint8_t bpp, uint16_t width, int x, int y, uint32_t FRcolor, uint32_t BKcolor, uint8_t fontn)
-{
-	if (fb == NULL || bpp == 0 || (bpp % 8) != 0)
-		return;
-
-	int i = 0, j = 0, testval = 0, btpp = bpp / 8, counter = btpp;
-	uint8_t* addr = NULL, * fontp = font[fontn], inbox = 0;
-
-	for (i = 0; i < 16; i++)
-	{
-		addr = (uint8_t*)(fb + (width * (y + i) + x) * btpp);
-		testval = 0x100;
-		for (j = 0; j < 8; j++)
-		{
-			testval = testval >> 1;
-			if (*fontp & testval)
-			{
-				while (counter < btpp)
-				{
-					inbox = (uint8_t)(FRcolor >> (8 * counter)) & 0x000000FF;
-					*addr = inbox;
-					++addr;
-					counter++;
-				}
-			}
-			else
-			{
-				while (counter < btpp)
-				{
-					inbox = (uint8_t)(BKcolor >> (8 * counter)) & 0x000000FF;
-					*addr = inbox;
-					++addr;
-					counter++;
-				}
-			}
-			counter = 0;
-		}
-		fontp++;
-	}
-
-}
-
 int atoi_k(const char** s)
 {
 	int i = 0;
@@ -78,7 +36,7 @@ int atoi_k(const char** s)
 char* itoa_k(char* str, long num, int size, int base, int precision, int type)
 {
 
-	char c = 0, sign = 0, tmp[64] = { 0 };
+	char c = 0, sign = 0, tmp[256] = { 0 };
 
 	/* counter */
 	int i = 0, offset = size;
@@ -300,6 +258,10 @@ int vsprintf_k(char* buf, const char* fmt, va_list args)
 				field_width = -field_width;
 				flags |= LEFT;
 			}
+    if (field_width > 256)
+    {
+				field_width = 256;
+    }
 		}
 
 		/* get the precision to decide how many digits after decimal point. the precision here is mainly used by string, not decimal fraction, because there isn't any */
@@ -519,7 +481,7 @@ int print(uint32_t fcolor, uint32_t bcolor, const char* _Format, ...)
 				if (position.y_pos < 0)
 					position.y_pos = (backupscrn.y_res / backupscrn.y_size - 1) * backupscrn.y_size;
 			}
-			putchar_k(backupscrn.fbaddr, backupscrn.bpp, backupscrn.x_res, position.x_pos * backupscrn.x_size, position.y_pos * backupscrn.y_size, fcolor, bcolor, ' ');
+			backupscrn.putchar_k(backupscrn.fbaddr, backupscrn.bpp, backupscrn.x_res, position.x_pos * backupscrn.x_size, position.y_pos * backupscrn.y_size, fcolor, bcolor, ' ');
 		}
 		else if (ifnbt == '\t')
 		{
@@ -527,12 +489,12 @@ int print(uint32_t fcolor, uint32_t bcolor, const char* _Format, ...)
 
 _tab:
 			line--;
-			putchar_k(backupscrn.fbaddr, backupscrn.bpp, backupscrn.x_res, position.x_pos * backupscrn.x_size, position.y_pos * backupscrn.y_size, fcolor, bcolor, ' ');
+			backupscrn.putchar_k(backupscrn.fbaddr, backupscrn.bpp, backupscrn.x_res, position.x_pos * backupscrn.x_size, position.y_pos * backupscrn.y_size, fcolor, bcolor, ' ');
 			position.x_pos++;
 		}
 		else
 		{
-			putchar_k(backupscrn.fbaddr, backupscrn.bpp, backupscrn.x_res, position.x_pos * backupscrn.x_size, position.y_pos * backupscrn.y_size, fcolor, bcolor, ifnbt);
+			backupscrn.putchar_k(backupscrn.fbaddr, backupscrn.bpp, backupscrn.x_res, position.x_pos * backupscrn.x_size, position.y_pos * backupscrn.y_size, fcolor, bcolor, ifnbt);
 			position.x_pos++;
 		}
 

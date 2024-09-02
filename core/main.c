@@ -24,6 +24,12 @@
 void SystemCollapsed()
 {
     // 
+    uint32_t i = 0, j = (backupscrn.x_res - 17 - (backupscrn.x_res - 17) % 2) / 2;
+    for(i = 0;i < j;i++)
+        print(ORANGE,BLACK,"-");
+    print(ORANGE,BLACK,"System Collapsed!");
+    for(;i < backupscrn.x_res;i++)
+        print(ORANGE,BLACK,"-");
     while(1);
 }
 
@@ -40,17 +46,48 @@ int Start_Kernel(kernelconfig *config)
 
     long i=0xffff800000001000;
 
-    print(WHITE,BLACK,"Hello world\nabc %#018lx \n",i,i);
+    print(WHITE,BLACK,"Hello world\nabc %#018lx \n",i);
 
-//    gmd.code_start = (uint64_t)& _text;
-//    gmd.code_end   = (uint64_t)& _etext;
-//    gmd.data_end   = (uint64_t)& _edata;
-//    gmd.eoc        = (uint64_t)& _end;
+    gmd.code_start = (addrtype)& _text;
+    gmd.code_end   = (addrtype)& _etext;
+    gmd.data_end   = (addrtype)& _edata;
+    gmd.eoc        = (addrtype)& _end;
 
     init2(&osconf);
+    init_gmd();
 
-//    memset((void *)__CORE_LINEAR_ADDR(0x200000),0xc0,256);
+    /* initialize bitmap */
+    gmd.block_bitmap = (uint64_t *)mem_1k_align(gmd.eoc);
+    memblk_get_length(osconf.memory);
+    gmd.bitmap_len_byte = mem_8byte_align(gmd.bitmap_length);
 
+    gmd.heap = (addrtype *)mem_1k_align(gmd.block_bitmap + gmd.bitmap_len_byte);
+
+    memset(gmd.block_bitmap,0xff,gmd.bitmap_len_byte);		/* clear all the bitmap first */ 
+
+    /* initialize memblk */
+    gmd.blocks = (memblk *)gmd.heap;
+    gmd.blkstructsize = (gmd.bitmap_length * sizeof(memblk) + sizeof(uint64_t) - 1) & ( ~ (sizeof(uint64_t) - 1));
+
+    gmd.heap += (addrtype)gmd.blkstructsize;
+
+    memset(gmd.blocks,0x00,gmd.blkstructsize); /* clear block struct first */
+
+    /* super init then... */
+    memblk_init(osconf.memory);
+    for(uint32_t i = 0;i < gmd.bitmap_length;i++)
+    {
+        gmd.blocks[i].fragments = (memfragment *)gmd.heap;
+        uint64_t tmp = (sizeof(memfragment) + sizeof(uint64_t) - 1) & ( ~ (sizeof(uint64_t) - 1));
+        gmd.heap += tmp;
+        memset(gmd.blocks[i].fragments,0x00,tmp);
+        gmd.blocks[i].fragments->presents = 0;
+        gmd.blocks[i].fragments->parent = gmd.blocks;
+        
+    }
+
+    print(WHITE,BLACK,"memblk bitmap:%*lb\n",gmd.bitmap_length,*gmd.block_bitmap);
+    print(WHITE,BLACK,"heap top address: %#018lx\n",gmd.heap);
     //  load and start the "real" kernel
     
 

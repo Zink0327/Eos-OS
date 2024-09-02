@@ -1,7 +1,7 @@
-/*----------EOS kernel entry include file----------
-    File name:main.h
+/*----------EOS memory processing module for BIOS----------
+    File name:memblk.c
 
-    Copyright (C) 2023 by Zink
+    Copyright (C) 2024 by Zink
     This file is part of EOS
 
     EOS is free software: you can redistribute it and/or modify
@@ -18,12 +18,14 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 */
-#ifndef _EOS_MAIN_H_
-#define _EOS_MAIN_H_
 
-#include "print.h"
 #include "memblk.h"
-#include "init.h"
 
+void init_gmd()
+{
+    gmd.blocksize=0;
+    gmd.block_bitmap = NULL;
+    gmd.bitmap_length = 0;
+    gmd.bitmap_len_byte = 0;
+}
 
-#endif

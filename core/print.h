@@ -35,7 +35,8 @@
     dst.y_res = src.screen.y_res;\
     dst.bpp = src.screen.bpp;\
     dst.x_size = src.screen.x_size;\
-    dst.y_size = src.screen.y_size;
+    dst.y_size = src.screen.y_size;\
+    dst.putchar_k = src.screen.putchar_k;
 
 
 /* some token used by itoa_k() */
@@ -48,16 +49,43 @@
 #define LOWERCASE	64  /* use 'abcdef' instead of 'ABCDEF'   01000000*/
 
 /* some useful colors */
-#define WHITE 	0xFFFFFF
-#define BLACK 	0x000000
-#define RED	0xFF0000		
-#define ORANGE	0xFF8000		
-#define YELLOW	0xFFFF00		
-#define GREEN	0x00FF00		
+#define WHITE 	0xFFFFFF  // system notice
+#define BLACK 	0x000000  // background color
+#define RED	0xFF0000 	   // exception/function call failure
+#define ORANGE	0xFF8000  // system fatal error
+#define YELLOW	0xFFFF00  // exception explanation
+#define GREEN	0x00FF00  // success
 #define BLUE	0x0000FF
-#define INDIGO	0x00FFFF
+#define INDIGO	0x00FFFF  // initial function/subprocess notice
 #define PURPLE	0x8000FF
 
+/*
+Prefix - How to use
+
+prefix       usage
+[ xxx] exception/interrupt 
+<xxx>  function
+--xx-- core step/core collapsed
+*/
+
+typedef void (*putchar_fun)(uint8_t*, uint8_t, uint16_t, int, int, uint32_t, uint32_t, uint8_t);
+/*
+
+Definition of each arguments
+
+void putchar_k(
+    uint8_t * fb,    // frame buffer (ignore if absent. For example, screen using i2c, spi, serial as their interface)
+    uint8_t bpp,     // BIT per pixel (ignore if absent.) 
+    uint16_t width,  // X resolution (must present)
+    int x,           // x-coordinate (must present)
+    int y,           // y-coordinate (must present)
+    uint32_t FRcolor,// character's color (ignore if absent) 
+    uint32_t BKcolor,// background color (ignore if absent) 
+    uint8_t c        // character to be displayed (must present)
+
+);
+
+*/
 struct _position {
 	int16_t x_pos;
 	int16_t y_pos;
@@ -73,21 +101,11 @@ struct screenbkup {
     uint8_t bpp;
     uint16_t x_size;
     uint16_t y_size;
+    putchar_fun putchar_k;
 } backupscrn;
 
 /* buffer */
 char tmpbuf[4096]={0};
-
-void putchar_k(
-    uint8_t * fb,    /* frame buffer */
-    uint8_t bpp,     /* BIT per pixel */
-    uint16_t width,  /* X resolution */
-    int x,           /* x-coordinate */
-    int y,           /* y-coordinate */
-    uint32_t FRcolor,/* character's color */
-    uint32_t BKcolor,/* background color */
-    uint8_t fontn    /* character to be displayed */
-);
 
 /* transfer string to number */
 int atoi_k(const char **s);
