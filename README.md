@@ -27,6 +27,7 @@ EOS is designed to be compiled under Windows (but I'll appreciate a lot if you w
 To avoid bringing something not nice to the source code, you have to create a folder to put the source code folder into it and rename the source code folder as src. You have to create a folder by the source code folder called "tools", then put [Netwide Assembler (NASM)](https://nasm.us/) into tools/nasm, GCC into tools/gcc ( **GCC must be able to create ELF file under Windows.** You can find an introduction about how to compile one [here: https://wiki.osdev.org/GCC_Cross-Compiler](https://wiki.osdev.org/GCC_Cross-Compiler)) and edimg.exe into tools/edimg (you can find it in tools/edimg in this repository). 
 
 After that, the folder will look like this:
+
 Eos-Build-Env
 
 ├─tools
@@ -43,17 +44,17 @@ Eos-Build-Env
 
 └─(make.bat)
 
-you have to create a file "make.bat" (or any other name you like), and fill this file with these following content:
+you have to create a file "make.bat" (or any other name you like), and fill this file with the following content:
 
 ```
 @echo off
 :: This file is the script of the compilation of the EOS. Run this first.
 
-::------------CONFIGURE------------
+::------------CONFIGURATION------------
 ::Feel free to edit the following configuration.
 
-:: configure the following compiler if you want to cross compile
-:: MAKE SURE THAT THE EXECUTABLE FILES HAVE BEEN PUT IN tools/gcc/bin
+:: configure the following compiler option if you want to do cross-compile
+:: MAKE SURE THAT THE EXECUTABLE FILES HAVE BEEN PUT INTO tools/gcc/bin
 set CC=x86_64-pc-linux-gcc.exe
 set AS=x86_64-pc-linux-as.exe
 set LD=x86_64-pc-linux-ld.exe
@@ -64,10 +65,10 @@ set NASM=nasm
 :: configure the arch and boot way
 set ARCH=x86_64
 set TYPE=BIOS
-::if your architecture don't have specific type, leave it empty
+::if your architecture doesn't have any specific type, leave it empty
 set SUBTYPE=
 
-::--------END OF CONFIGURE----------
+::--------END OF CONFIGURATION----------
 
 set WORKROOT=%~dp0
 
@@ -104,4 +105,4 @@ pause
 
 just double click the make.bat in the root directory and it will do everything for you. ;-) 
 
-If you want to cross-compile, you have to edit 3 file: make.bat above, global.h at path/to/Eos-Build-Env/src/core/ to set the architecture and compiler.
+If you want to do cross-compile, you have to edit 2 file: make.bat above and global.h at path/to/Eos-Build-Env/src/core/ to set the architecture and compiler.
