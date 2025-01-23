@@ -24,9 +24,12 @@
 #ifndef __GLOBAL_H__
 #define __GLOBAL_H__
 
+// if you want to cros-compile, disable this first.
+#define x86_64
+
 #include "linkage.h"
 
-#define NULL 0
+#define NULL (void *)0
 
 typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
@@ -37,6 +40,8 @@ typedef char int8_t;
 typedef short int16_t;
 typedef int int32_t;
 typedef long int64_t;
+
+typedef uint64_t addrtype;
 
 typedef uint64_t QWORD;
 typedef uint32_t DWORD;

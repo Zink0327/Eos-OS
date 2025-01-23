@@ -21,17 +21,20 @@
 #ifndef __LIB_K_H__
 #define __LIB_K_H__
 
+#include "global.h"
+
 #define container_of(ptr,type,member)							\
 ({											\
 	typeof(((type *)0)->member) * p = (ptr);					\
 	(type *)((unsigned long)p - (unsigned long)&(((type *)0)->member));		\
 })
 
-
-#define sti() 		__asm__ __volatile__ ("sti	\n\t":::"memory")
-#define cli()	 	__asm__ __volatile__ ("cli	\n\t":::"memory")
-#define nop() 		__asm__ __volatile__ ("nop	\n\t")
-#define io_mfence() 	__asm__ __volatile__ ("mfence	\n\t":::"memory")
+#ifdef x86_64
+void io_sti();
+void io_cli();
+void io_nop();
+void io_mfence();
+#endif
 
 /* something about list processing... */
 #include "global.h"
@@ -48,7 +51,7 @@ inline void list_init(struct List * list)
 	list->next = list;
 }
 
-inline void list_add_to_behind(struct List * entry,struct List * new)	////add to entry behind
+inline void list_append(struct List * entry,struct List * new)	////add to entry behind
 {
 	new->next = entry->next;
 	new->prev = entry;
@@ -56,7 +59,7 @@ inline void list_add_to_behind(struct List * entry,struct List * new)	////add to
 	entry->next = new;
 }
 
-inline void list_add_to_before(struct List * entry,struct List * new)	////add to entry behind
+inline void list_insert_to_head(struct List * entry,struct List * new)	////add to entry behind
 {
 	new->next = entry;
 	entry->prev->next = new;
@@ -70,7 +73,7 @@ inline void list_del(struct List * entry)
 	entry->prev->next = entry->next;
 }
 
-inline long list_is_empty(struct List * entry)
+inline long is_list_empty(struct List * entry)
 {
 	if(entry == entry->next && entry->prev == entry)
 		return 1;
@@ -97,81 +100,6 @@ inline struct List * list_next(struct List * entry)
 /* over */
 /* something about string processing... */
 
-inline void * memcpy(void *From,void * To,long Num)
-{
-	int d0,d1,d2;
-	__asm__ __volatile__	(	"cld	\n\t"
-					"rep	\n\t"
-					"movsq	\n\t"
-					"testb	$4,%b4	\n\t"
-					"je	1f	\n\t"
-					"movsl	\n\t"
-					"1:\ttestb	$2,%b4	\n\t"
-					"je	2f	\n\t"
-					"movsw	\n\t"
-					"2:\ttestb	$1,%b4	\n\t"
-					"je	3f	\n\t"
-					"movsb	\n\t"
-					"3:	\n\t"
-					:"=&c"(d0),"=&D"(d1),"=&S"(d2)
-					:"0"(Num/8),"q"(Num),"1"(To),"2"(From)
-					:"memory"
-				);
-	return To;
-}
-
-/*
-		FirstPart = SecondPart		=>	 0
-		FirstPart > SecondPart		=>	 1
-		FirstPart < SecondPart		=>	-1
-*/
-
-inline int memcmp(void * FirstPart,void * SecondPart,long Count)
-{
-	register int __res;
-
-	__asm__	__volatile__	(	"cld	\n\t"		//clean direct
-					"repe	\n\t"		//repeat if equal
-					"cmpsb	\n\t"
-					"je	1f	\n\t"
-					"movl	$1,	%%eax	\n\t"
-					"jl	1f	\n\t"
-					"negl	%%eax	\n\t"
-					"1:	\n\t"
-					:"=a"(__res)
-					:"0"(0),"D"(FirstPart),"S"(SecondPart),"c"(Count)
-					:
-				);
-	return __res;
-}
-
-/*
-Copy C to memory at the first n bytes of str
-*/
-
-inline void * memset(void * str,unsigned char C,long n)
-{
-	int d0,d1;
-	unsigned long tmp = C * 0x0101010101010101UL;
-	__asm__	__volatile__	(	"cld	\n\t"
-					"rep	\n\t"
-					"stosq	\n\t"
-					"testb	$4, %b3	\n\t"
-					"je	1f	\n\t"
-					"stosl	\n\t"
-					"1:\ttestb	$2, %b3	\n\t"
-					"je	2f\n\t"
-					"stosw	\n\t"
-					"2:\ttestb	$1, %b3	\n\t"
-					"je	3f	\n\t"
-					"stosb	\n\t"
-					"3:	\n\t"
-					:"=&c"(d0),"=&D"(d1)
-					:"a"(tmp),"q"(n),"0"(n/8),"1"(str)	
-					:"memory"					
-				);
-	return str;
-}
 
 /*
 copy src to dest
@@ -179,18 +107,22 @@ copy src to dest
 
 inline char * strcpy(char * Dest,char * Src)
 {
-	__asm__	__volatile__	(	"cld	\n\t"
-					"1:	\n\t"
-					"lodsb	\n\t"
-					"stosb	\n\t"
-					"testb	%%al,	%%al	\n\t"
-					"jne	1b	\n\t"
-					:
-					:"S"(Src),"D"(Dest)
-					:
-					
+#ifdef x86_64
+	__asm__	__volatile__	(	"cld			\n\t"
+					"1:			\n\t"
+					"lodsb			\n\t"
+					"stosb			\n\t"
+					"testb	%%al, %%al	\n\t"
+					"jne	1b		\n\t"
+					::"S"(Src),"D"(Dest):
 				);
 	return 	Dest;
+#else
+	for (; *Src != '\0'; ++Dest, ++Src)
+		*Dest = *Src;
+	*Dest = '\0';
+	return Dest;
+#endif
 }
 
 /*
@@ -199,22 +131,27 @@ Copy the first n bytes from src to dest
 
 inline char * strncpy(char * Dest,char * Src,long n)
 {
-	__asm__	__volatile__	(	"cld	\n\t"
-					"1:	\n\t"
-					"decq	%2	\n\t"
-					"js	2f	\n\t"
-					"lodsb	\n\t"
-					"stosb	\n\t"
-					"testb	%%al,	%%al	\n\t"
-					"jne	1b	\n\t"
-					"rep	\n\t"
-					"stosb	\n\t"
-					"2:	\n\t"
-					:
-					:"S"(Src),"D"(Dest),"c"(n)
-					:					
+#ifdef x86_64
+	__asm__	__volatile__	(	"cld			\n\t"
+					"1:			\n\t"
+					"decq	%[count]	\n\t"
+					"js	2f		\n\t"
+					"lodsb			\n\t"
+					"stosb			\n\t"
+					"testb	%%al, %%al	\n\t"
+					"jne	1b		\n\t"
+					"rep			\n\t"
+					"stosb			\n\t"
+					"2:			\n\t"
+					::"S"(Src),"D"(Dest),[count] "c"(n):					
 				);
 	return Dest;
+#else
+	for (; *Src != '\0' && n > 0; ++Dest, ++Src, --n)
+		*Dest = *Src;
+	*Dest = '\0';
+	return Dest;
+#endif 
 }
 
 /*
@@ -223,20 +160,30 @@ Append src to dest
 
 inline char * strcat(char * Dest,char * Src)
 {
-	__asm__	__volatile__	(	"cld	\n\t"
-					"repne	\n\t"
-					"scasb	\n\t"
-					"decq	%1	\n\t"
-					"1:	\n\t"
-					"lodsb	\n\t"
-					"stosb	\n\r"
-					"testb	%%al,	%%al	\n\t"
-					"jne	1b	\n\t"
+#ifdef x86_64
+	__asm__	__volatile__	(	"cld			\n\t"
+					"repne			\n\t"
+					"scasb			\n\t"
+					"decq	%[rdi]		\n\t"
+					"1:			\n\t"
+					"lodsb			\n\t"
+					"stosb			\n\r"
+					"testb	%%al, %%al	\n\t"
+					"jne	1b		\n\t"
 					:
-					:"S"(Src),"D"(Dest),"a"(0),"c"(0xffffffff)
+					:[rsi] "S"(Src),[rdi] "D"(Dest),"a"(0),"c"(0xffffffff)
 					:					
 				);
 	return Dest;
+#else
+	while (*Dest != 0)
+		++Dest;
+
+	for (; *Src != '\0'; ++Dest, ++Src)
+		*Dest = *Src;
+	*Dest = '\0';
+	return Dest;
+#endif
 }
 
 /*
@@ -246,28 +193,37 @@ inline char * strcat(char * Dest,char * Src)
 		FirstPart < SecondPart => -1
 */
 
-inline int strcmp(char * FirstPart,char * SecondPart)
+int strcmp(char * FirstPart,char * SecondPart)
 {
+#ifdef x86_64
 	register int __res;
-	__asm__	__volatile__	(	"cld	\n\t"
-					"1:	\n\t"
-					"lodsb	\n\t"
-					"scasb	\n\t"
-					"jne	2f	\n\t"
+	__asm__	__volatile__	(	"cld			\n\t"
+					"1:			\n\t"
+					"lodsb			\n\t"
+					"scasb			\n\t"
+					"jne	2f		\n\t"
 					"testb	%%al,	%%al	\n\t"
-					"jne	1b	\n\t"
+					"jne	1b		\n\t"
 					"xorl	%%eax,	%%eax	\n\t"
-					"jmp	3f	\n\t"
-					"2:	\n\t"
+					"jmp	3f		\n\t"
+					"2:			\n\t"
 					"movl	$1,	%%eax	\n\t"
-					"jl	3f	\n\t"
-					"negl	%%eax	\n\t"
-					"3:	\n\t"
-					:"=a"(__res)
-					:"D"(FirstPart),"S"(SecondPart)
-					:					
+					"jl	3f		\n\t"
+					"negl	%%eax		\n\t"
+					"3:			\n\t"
+					:"=a"(__res):"D"(FirstPart),"S"(SecondPart):
 				);
 	return __res;
+#else
+	unsigned char *s0 = (unsigned char *)FirstPart;
+	unsigned char *s1 = (unsigned char *)SecondPart;
+	int d = 0;
+
+	for(;(*s0 || *s1)&&(d != 0);++s0,++s1)
+		d = *s0 - *s1;
+
+	return d;
+#endif
 }
 
 /*
@@ -277,46 +233,70 @@ inline int strcmp(char * FirstPart,char * SecondPart)
 		FirstPart < SecondPart => -1
 */
 
-inline int strncmp(char * FirstPart,char * SecondPart,long n)
+int strncmp(char * FirstPart,char * SecondPart,long n)
 {	
+#ifdef x86_64
 	register int __res;
-	__asm__	__volatile__	(	"cld	\n\t"
-					"1:	\n\t"
-					"decq	%3	\n\t"
-					"js	2f	\n\t"
-					"lodsb	\n\t"
-					"scasb	\n\t"
-					"jne	3f	\n\t"
+	__asm__	__volatile__	(	"cld			\n\t"
+					"1:			\n\t"
+					"decq	%3		\n\t"
+					"js	2f		\n\t"
+					"lodsb			\n\t"
+					"scasb			\n\t"
+					"jne	3f		\n\t"
 					"testb	%%al,	%%al	\n\t"
-					"jne	1b	\n\t"
-					"2:	\n\t"
+					"jne	1b		\n\t"
+					"2:			\n\t"
 					"xorl	%%eax,	%%eax	\n\t"
-					"jmp	4f	\n\t"
-					"3:	\n\t"
+					"jmp	4f		\n\t"
+					"3:			\n\t"
 					"movl	$1,	%%eax	\n\t"
-					"jl	4f	\n\t"
-					"negl	%%eax	\n\t"
-					"4:	\n\t"
-					:"=a"(__res)
-					:"D"(FirstPart),"S"(SecondPart),"c"(n)
-					:
+					"jl	4f		\n\t"
+					"negl	%%eax		\n\t"
+					"4:			\n\t"
+					:"=a"(__res):"D"(FirstPart),"S"(SecondPart),"c"(n):
 				);
 	return __res;
+#else
+	unsigned char c0,c1;
+	char r = 0
+	for(;n;--n,++FirstPart,++SecondPart)
+	{
+		c0 = *FirstPart;
+		c1 = *SecondPart;
+		if(c0 != c1)
+		{
+			r = c0 < c1 ? -1 : 1;
+			break;
+		}
+		if(!c0)
+			break;
+
+	}
+	return r;
+#endif
 }
 
-inline int strlen(char * String)
+int strlen(char * String)
 {
+#ifdef x86_64
 	register int __res;
-	__asm__	__volatile__	(	"cld	\n\t"
-					"repne	\n\t"
-					"scasb	\n\t"
-					"notl	%0	\n\t"
-					"decl	%0	\n\t"
-					:"=c"(__res)
+	__asm__	__volatile__	(	"cld		\n\t"
+					"repne		\n\t"
+					"scasb		\n\t"
+					"notl	%[len]	\n\t"
+					"decl	%[len]	\n\t"
+					:[len] "=c"(__res)
 					:"D"(String),"a"(0),"0"(0xffffffff)
 					:
 				);
 	return __res;
+#else
+	char *e = String;
+	for(;*e != '\0';++e)
+		;
+	return (e - String);
+#endif
 }
 
 /* over */
@@ -336,52 +316,23 @@ inline unsigned long bit_clean(unsigned long * addr,unsigned long nr)
 	return	*addr & (~(1UL << nr));
 }
 
-inline unsigned char io_in8(unsigned short port)
-{
-	unsigned char ret = 0;
-	__asm__ __volatile__(	"inb	%%dx,	%0	\n\t"
-				"mfence			\n\t"
-				:"=a"(ret)
-				:"d"(port)
-				:"memory");
-	return ret;
-}
+uint8_t io_in8(uint16_t port);
+uint16_t io_in16(uint16_t port);
+uint32_t io_in32(uint16_t port);
+void io_out8(uint16_t port,uint8_t value);
+void io_out16(uint16_t port,uint16_t value);
+void io_out32(uint16_t port,uint32_t value);
 
-inline unsigned int io_in32(unsigned short port)
-{
-	unsigned int ret = 0;
-	__asm__ __volatile__(	"inl	%%dx,	%0	\n\t"
-				"mfence			\n\t"
-				:"=a"(ret)
-				:"d"(port)
-				:"memory");
-	return ret;
-}
-
-inline void io_out8(unsigned short port,unsigned char value)
-{
-	__asm__ __volatile__(	"outb	%0,	%%dx	\n\t"
-				"mfence			\n\t"
-				:
-				:"a"(value),"d"(port)
-				:"memory");
-}
-
-inline void io_out32(unsigned short port,unsigned int value)
-{
-	__asm__ __volatile__(	"outl	%0,	%%dx	\n\t"
-				"mfence			\n\t"
-				:
-				:"a"(value),"d"(port)
-				:"memory");
-}
-
-
+#ifdef x86_64
 
 #define port_insw(port,buffer,nr)	\
 __asm__ __volatile__("cld;rep;insw;mfence;"::"d"(port),"D"(buffer),"c"(nr):"memory")
 
 #define port_outsw(port,buffer,nr)	\
 __asm__ __volatile__("cld;rep;outsw;mfence;"::"d"(port),"S"(buffer),"c"(nr):"memory")
+
+#endif
+
+
 
 #endif

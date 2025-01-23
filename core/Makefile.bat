@@ -107,6 +107,8 @@ echo FATAL ERROR: %WORKROOT%tools\gcc\bin\%LD% not found!
 goto end
 )
 
+echo %WORKROOT%tools\gcc\bin\x86_64-pc-linux-objdump.exe -D %WORKROOT%build\kernel.elf > %WORKROOT%build\kerneldump.txt
+%WORKROOT%tools\gcc\bin\x86_64-pc-linux-objdump.exe -D %WORKROOT%build\kernel.elf > %WORKROOT%build\kerneldump.txt
 
 if exist %WORKROOT%tools\gcc\bin\%OBJCOPY% (
 echo %WORKROOT%tools\gcc\bin\%OBJCOPY% -I %LDLINKFMT% -S -R ".eh_frame" -R ".comment" -O binary %WORKROOT%build\kernel.elf %WORKROOT%build\carbon.bin

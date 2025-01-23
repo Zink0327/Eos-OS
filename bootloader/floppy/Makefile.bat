@@ -18,7 +18,7 @@
 
 ::src/bootloader/floppy/Makefile.bat
 
-@echo off
+::@echo off
 echo entering directory %~dp0
 if "%1" equ "clean" (goto clean) else (goto build)
 
@@ -28,24 +28,24 @@ del *.lst
 goto end
 
 :build
-if exist %~dp0..\..\tools\nasm\nasm.exe (
-%~dp0..\..\tools\nasm\nasm.exe %~dp0\mbr.asm -o %~dp0..\..\build\mbr.bin -l %~dp0..\..\build\mbr.lst
-echo %~dp0..\..\tools\nasm\nasm.exe %~dp0\mbr.asm -o %~dp0..\..\build\mbr.bin -l %~dp0..\..\build\mbr.lst
-if not exist %~dp0..\..\build\mbr.bin (
+if exist %WORKROOT%tools\nasm\nasm.exe (
+%WORKROOT%tools\nasm\nasm.exe %~dp0\mbr.asm -o %WORKROOT%build\mbr.bin -l %WORKROOT%build\mbr.lst
+echo %WORKROOT%tools\nasm\nasm.exe %~dp0\mbr.asm -o %WORKROOT%build\mbr.bin -l %WORKROOT%build\mbr.lst
+if not exist %WORKROOT%build\mbr.bin (
 set ERRFLAG="1"
 echo compile error!
 goto end
 )
-echo %~dp0..\..\tools\nasm\nasm.exe %~dp0\loader.asm -i %~dp0 -o %~dp0..\..\build\loader.bin -l %~dp0..\..\build\loader.lst
-%~dp0..\..\tools\nasm\nasm.exe %~dp0\loader.asm -i %~dp0 -o %~dp0..\..\build\loader.bin -l %~dp0..\..\build\loader.lst
-if not exist %~dp0..\..\build\loader.bin (
+echo %WORKROOT%tools\nasm\nasm.exe %~dp0\loader.asm -i %~dp0 -o %WORKROOT%build\loader.bin -l %WORKROOT%build\loader.lst
+%WORKROOT%tools\nasm\nasm.exe %~dp0\loader.asm -i %~dp0 -o %WORKROOT%build\loader.bin -l %WORKROOT%build\loader.lst
+if not exist %WORKROOT%build\loader.bin (
 set ERRFLAG="1"
 echo compile error!
 goto end
 )
 ) else (
 set ERRFLAG="1"
-echo FATAL ERROR: ..\..\tools\nasm\nasm.exe not found!
+echo FATAL ERROR: %WORKROOT%tools\nasm\nasm.exe not found!
 )
 goto end
 

@@ -1,4 +1,8 @@
-/*----------EOS memory processing module for xxx----------
+This directory contains the necessary files of the initialize function (init(), init2()), in which some nesessary struct and functions' declaration have been written. **JUST EDIT THE CONTENT IN XX ONLY!!!** If you renamed the function/struct's name, the whole compilation may end in failure.
+
+for example,
+'''
+/*----------EOS memory processing module for xxx(able to edit)----------
     File name:memory.h
 
     Copyright (C) 20xx by xxx
@@ -19,14 +23,20 @@
 
 */
 // this file is the template of the initialize part of the EOS core.
+'''
 
-#ifndef _EOS_MEM_XXX
+#ifndef _EOS_MEM_XXX <-- **able to edit**
+
+'''
 #define _EOS_MEM_XXX
 
-#include "defines.h"
+#include "defines.h" 
 #include "print.h"
+'''
 
-struct __memblknode
+struct __memblknode <-- **don't edit this**
+
+'''
 {
     uint64_t addr;  
     uint64_t len;   
@@ -36,34 +46,15 @@ struct __memblknode
 
 struct __memblk
 {
-    struct __memblknode blocks[xx]; 
+'''
+
+    struct __memblknode blocks[xx]; <-- **content in [] is able to edit**
+
+'''
     uint32_t counts;               
-    uint32_t ramcounts;
 };
 
 typedef struct __memblk memconfig;
-
-/* memblk gmd struct initialize. Differ fron the memconfig's struct */
-#define memblk_init(src) \
-    gmd.bitmap_length = src.ramcounts; \
-    for (uint32_t i = 0,j = 0,k = 0; j < src.counts; j++) \
-    { \
-        if (src.blocks[j].type == 1) \
-        { \
-            gmd.blocksize = src.blocks[j].size; \
-            uint32_t l = src.blocks[j].len; \
-            while(k < l) \
-            { \
-                gmd.blocks[i].address = src.blocks[j].addr + src.blocks[j].size * k; \
-                gmd.blocks[i].type = 1; \
-                gmd.blocks[i].fragments = NULL; \
-                gmd.blocks[i++].fragcount = 0; \
-            } \
-        } \
-        k = 0; \
-    }
-    
-/* realized in asmfun.asm/asmfun.S */
 
 void * memcpy(void *From,void * To,long Num);
 
@@ -73,3 +64,5 @@ void * memset(void * str,unsigned char C,long n);
 
 void init_memory(memconfig *conf);
 #endif
+
+'''

@@ -29,3 +29,7 @@ void init_gmd()
     gmd.bitmap_len_byte = 0;
 }
 
+memblk *alloc_memblk(uint64_t blockcounts)
+{
+    uint64_t *copy = gmd.block_bitmap;
+}

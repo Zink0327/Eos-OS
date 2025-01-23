@@ -149,14 +149,14 @@ CALL newline
 
 ;enter big real mode
 
+;since there isn't an IDT there, disable interrupt first
+CLI
+
 ;open a20 address
 ;a must-do to enter protect mode
 IN AL,92h
 OR AL,00000010b
 OUT 92H,AL
-
-;since there isn't an IDT there, disable interrupt first
-CLI
 
 ;create GDT
 LGDT [GdtPtr]

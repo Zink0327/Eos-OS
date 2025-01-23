@@ -74,13 +74,13 @@ typedef void (*putchar_fun)(uint8_t*, uint8_t, uint16_t, int, int, uint32_t, uin
 Definition of each arguments
 
 void putchar_k(
-    uint8_t * fb,    // frame buffer (ignore if absent. For example, screen using i2c, spi, serial as their interface)
-    uint8_t bpp,     // BIT per pixel (ignore if absent.) 
+    uint8_t * fb,    // frame buffer (ignore if using screen of other interface. i2c, spi, serial, etc.)
+    uint8_t bpp,     // BIT per pixel (ignore if using screen of other interface.) 
     uint16_t width,  // X resolution (must present)
     int x,           // x-coordinate (must present)
     int y,           // y-coordinate (must present)
-    uint32_t FRcolor,// character's color (ignore if absent) 
-    uint32_t BKcolor,// background color (ignore if absent) 
+    uint32_t FRcolor,// character's color (ignore if using screen of other interface.) 
+    uint32_t BKcolor,// background color (ignore if using screen of other interface.) 
     uint8_t c        // character to be displayed (must present)
 
 );
