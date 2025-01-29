@@ -25,7 +25,7 @@ void putchar_framebuffer(uint8_t* fb, uint8_t bpp, uint16_t width, int x, int y,
 	if (fb == NULL || bpp == 0 || (bpp % 8) != 0)
 		return;
 
-	int i = 0, j = 0, testval = 0, btpp = bpp / 8, counter = btpp;
+	int i = 0, j = 0, testval = 0, btpp = bpp / 8, counter = 0;
 	uint8_t* addr = NULL, * fontp = font[fontn], inbox = 0;
 
 	for (i = 0; i < 16; i++)

@@ -102,13 +102,13 @@ char* itoa_k(char* str, long num, int size, int base, int precision, int type)
 			n = nnn % base;
 			tmp[i++] = digits[n];
 /*   to calculate 23 based 10 to base 2, for example
-						 ^
-	   2 |__2_3__ ......1|
-	   2 |__1_1__ ......1|
-		2 |__5__  ......1|
-		2 |__2__  ......0|
-			 1           |
-			 -------------
+                         ^
+       2 |__2_3__ ......1|
+       2 |__1_1__ ......1|
+        2 |__5__  ......1|
+        2 |__2__  ......0|
+             1           |
+             -------------
 
 	   23 based 10 = 10111 based 2
 
@@ -120,11 +120,23 @@ char* itoa_k(char* str, long num, int size, int base, int precision, int type)
 		}
 	}
 
-	if (i > precision)
+	int tmp_len = precision;
+
+    if (i > tmp_len)
 	{
-		precision = i;
+		tmp_len = i;
 	}
-	offset -= precision;
+	if (offset < tmp_len && offset >= 0)
+	{
+		i += offset - tmp_len;
+		offset -= tmp_len;
+		tmp_len = i;
+	}
+	else
+	{
+		offset -= tmp_len;
+	}
+
 
 	/* write number data into the string */
 	if (!(type & (ZEROPAD + LEFT))) /* neither "fill with zero" nor "left justified" */
@@ -169,7 +181,7 @@ char* itoa_k(char* str, long num, int size, int base, int precision, int type)
 		}
 	}
 	/* fill in with 0 to the specified width */
-	while (i < precision--)
+	while (i < tmp_len--)
 	{
 		*str = '0';
 		++str;
@@ -258,10 +270,10 @@ int vsprintf_k(char* buf, const char* fmt, va_list args)
 				field_width = -field_width;
 				flags |= LEFT;
 			}
-    if (field_width > 256)
-    {
+			if (field_width > 256)
+			{
 				field_width = 256;
-    }
+			}
 		}
 
 		/* get the precision to decide how many digits after decimal point. the precision here is mainly used by string, not decimal fraction, because there isn't any */
@@ -306,6 +318,7 @@ int vsprintf_k(char* buf, const char* fmt, va_list args)
 				}
 			}
 			*str  = (uint8_t)va_arg(args, int);
+			++str;
 			while (--field_width > 0)
 			{
 				*str = ' ';

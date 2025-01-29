@@ -55,7 +55,7 @@ typedef struct __memblk memconfig;
 
 #define memblk_get_length(src) gmd.bitmap_length = src.ramcounts;
 
-#define memblk_init(src)                                                             \
+#define memblk_init(src)   do{                                                       \
     for (uint32_t i = 0,j = 0,k = 0; j < src.counts; j++)                            \
     {                                                                                \
         if (src.blocks[j].type == 1)                                                 \
@@ -68,11 +68,13 @@ typedef struct __memblk memconfig;
                 gmd.blocks[i].type = 1;                                              \
                 gmd.blocks[i].fragments = NULL;                                      \
                 gmd.blocks[i].fragcount = 0;                                         \
-                if(gmd.blocks[i].address < (addrtype)gmd.heap)                       \
+                if (__CORE_LINEAR_ADDR(gmd.blocks[i].address) < PAGE_2M_ALIGN(gmd.heap))       \
+                {                                                                    \
                     mem_bitmap_set(i)                                                \
+                }                                                                    \
             }                                                                        \
         }                                                                            \
-    }
+    }}while(0)
 
 /* realized in asmfun.asm/asmfun.S */
 
@@ -85,7 +87,7 @@ void * memcpy(void *From,void * To,long Num);
 */
 int memcmp(void * FirstPart,void * SecondPart,long Count);
 
-/*Copy C to memory at the first n bytes of str*/
+/*Copy C to the first n bytes of str of the memory*/
 
 void * memset(void * str,unsigned char C,unsigned long n);
 

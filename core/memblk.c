@@ -29,7 +29,17 @@ void init_gmd()
     gmd.bitmap_len_byte = 0;
 }
 
-memblk *alloc_memblk(uint64_t blockcounts)
+void *simple_malloc(addrtype number_of_bytes)
+{
+    // under construction
+    void *tmp = (void *)gmd.heap;
+    gmd.heap += number_of_bytes;
+    memset(tmp,0x00,number_of_bytes);
+    return tmp;
+}
+
+memfragment *alloc_memblk(uint64_t blockcounts)
 {
     uint64_t *copy = gmd.block_bitmap;
+    return NULL;
 }

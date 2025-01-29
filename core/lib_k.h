@@ -59,7 +59,7 @@ inline void list_append(struct List * entry,struct List * new)	////add to entry 
 	entry->next = new;
 }
 
-inline void list_insert_to_head(struct List * entry,struct List * new)	////add to entry behind
+inline void list_insert_to_head(struct List * entry,struct List * new)
 {
 	new->next = entry;
 	entry->prev->next = new;

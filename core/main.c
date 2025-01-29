@@ -47,6 +47,11 @@ int Start_Kernel(kernelconfig *config)
     long i=0xffff800000001000;
 
     print(WHITE,BLACK,"Hello world\nabc %#018lx \n",i);
+/*    for (uint8_t i = 0; i < 255; i++)
+    {
+        print(WHITE,BLACK,"%c",i);
+    }*/
+    
 
     gmd.code_start = (addrtype)& _text;
     gmd.code_end   = (addrtype)& _etext;
@@ -56,18 +61,18 @@ int Start_Kernel(kernelconfig *config)
     init2(&osconf);
     init_gmd();
 
-    /* initialize bitmap */
-    gmd.block_bitmap = (uint64_t *)mem_1k_align(gmd.eoc);
+    /* initialize memory block bitmap */
+    gmd.block_bitmap = (addrtype *)mem_1k_align(gmd.eoc);
     memblk_get_length(osconf.memory);
-    gmd.bitmap_len_byte = mem_8byte_align(gmd.bitmap_length);
+    gmd.bitmap_len_byte = mem_bit_size(gmd.bitmap_length);
 
     gmd.heap = (addrtype *)mem_1k_align(gmd.block_bitmap + gmd.bitmap_len_byte);
 
-    memset(gmd.block_bitmap,0xff,gmd.bitmap_len_byte);		/* clear all the bitmap first */ 
+    memset(gmd.block_bitmap,0x00,gmd.bitmap_len_byte);		/* clear all the bitmap first */ 
 
     /* initialize memblk */
     gmd.blocks = (memblk *)gmd.heap;
-    gmd.blkstructsize = (gmd.bitmap_length * sizeof(memblk) + sizeof(uint64_t) - 1) & ( ~ (sizeof(uint64_t) - 1));
+    gmd.blkstructsize = mem_align(gmd.bitmap_length * sizeof(memblk),sizeof(uint64_t));
 
     gmd.heap += (addrtype)gmd.blkstructsize;
 
@@ -77,17 +82,16 @@ int Start_Kernel(kernelconfig *config)
     memblk_init(osconf.memory);
     for(uint32_t i = 0;i < gmd.bitmap_length;i++)
     {
-        gmd.blocks[i].fragments = (memfragment *)gmd.heap;
-        uint64_t tmp = (sizeof(memfragment) + sizeof(uint64_t) - 1) & ( ~ (sizeof(uint64_t) - 1));
-        gmd.heap += tmp;
-        memset(gmd.blocks[i].fragments,0x00,tmp);
-        gmd.blocks[i].fragments->presents = 0;
+
+        gmd.blocks[i].fragments = (memfragment *)simple_malloc(mem_align(sizeof(memfragment),sizeof(uint64_t)));
+        gmd.blocks[i].fragments->attributes = 0;
         gmd.blocks[i].fragments->parent = gmd.blocks;
         
     }
+    print(WHITE,BLACK,"memblk bitmap length:%d\n",gmd.bitmap_length);
 
-    print(WHITE,BLACK,"memblk bitmap:%*lb\n",gmd.bitmap_length,*gmd.block_bitmap);
-    print(WHITE,BLACK,"heap top address: %#018lx\n",gmd.heap);
+    print(WHITE,BLACK,"memblk bitmap:%0*lb\n",gmd.bitmap_length,*gmd.block_bitmap);
+    print(WHITE,BLACK,"heap top address: %#lx\n",gmd.heap);
     //  load and start the "real" kernel
     
 
