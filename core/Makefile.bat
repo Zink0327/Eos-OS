@@ -25,19 +25,15 @@ if "%1" equ "clean" (goto clean) else (goto build)
 copy %~dp0init\%ARCH%\%TYPE%\%SUBTYPE%\* %~dp0
 copy %~dp0init\%ARCH%\* %~dp0
 
-if exist %WORKROOT%tools\gcc\bin\%CC% (
+
 dir %~dp0*.c /b > cfile.txt
 ::although the file names of output files might be a little bit ugly, but I've tried my best
 for /f %%m in (cfile.txt) do (
-echo %WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64 -c %~dp0%%m -o %WORKROOT%build\%%m.o -fno-stack-protector
-%WORKROOT%tools\gcc\bin\%CC% -Wall -mcmodel=large -fno-builtin -m64 -c %~dp0%%m -o %WORKROOT%build\%%m.o -fno-stack-protector
-if not exist %WORKROOT%build\%%m.o (
-set ERRFLAG="1"
-echo error in compiling %%m!
-goto end
-)
+call %WORKROOT%tools\ccrule %~dp0 %%m
 )
 del cfile.txt /q
+
+
 dir %~dp0*.S /b > sfile.txt
 for /f %%m in (sfile.txt) do (
 echo %WORKROOT%tools\gcc\bin\%CC% -E  %~dp0%%m > %WORKROOT%build\%%m.s
@@ -49,11 +45,7 @@ goto end
 )
 )
 del sfile.txt /q
-) else (
-set ERRFLAG="1"
-echo FATAL ERROR: %WORKROOT%tools\gcc\bin\%CC% not found!
-goto end
-)
+
 
 if exist %WORKROOT%tools\nasm\nasm.exe (
 dir %~dp0*.asm /b > asfile.txt
@@ -73,27 +65,17 @@ echo FATAL ERROR: %WORKROOT%tools\nasm\nasm.exe not found!
 goto end
 )
 
-if exist %WORKROOT%tools\gcc\bin\%AS% (
+
 dir %WORKROOT%build\*.s /b > ssfile.txt
 for /f %%m in (ssfile.txt) do (
-echo %WORKROOT%tools\gcc\bin\%AS% --64 %WORKROOT%build\%%m -o %WORKROOT%build\%%m.o
-%WORKROOT%tools\gcc\bin\%AS% --64 %WORKROOT%build\%%m -o %WORKROOT%build\%%m.o
-if not exist %WORKROOT%build\%%m.o (
-set ERRFLAG="1"
-echo error in compiling %%m!
-goto end
-)
+call %WORKROOT%tools\asrule %%m
 )
 del ssfile.txt /q
-) else (
-set ERRFLAG="1"
-echo FATAL ERROR: %WORKROOT%tools\gcc\bin\%AS% not found!
-goto end
-)
+
 
 
 if exist %WORKROOT%tools\gcc\bin\%LD% (
-echo %WORKROOT%tools\gcc\bin\%LD% -b %LDLINKFMT% -z muldefs -o %WORKROOT%build\kernel.elf  %OBJS% -T %~dp0linkkernel.lds 
+echo    LINK %OBJS% kernel.elf
 %WORKROOT%tools\gcc\bin\%LD% -b %LDLINKFMT% -z muldefs -o %WORKROOT%build\kernel.elf %OBJS% -T %~dp0linkkernel.lds 
 
 if not exist %WORKROOT%build\kernel.elf (
@@ -111,7 +93,7 @@ echo %WORKROOT%tools\gcc\bin\x86_64-pc-linux-objdump.exe -D %WORKROOT%build\kern
 %WORKROOT%tools\gcc\bin\x86_64-pc-linux-objdump.exe -D %WORKROOT%build\kernel.elf > %WORKROOT%build\kerneldump.txt
 
 if exist %WORKROOT%tools\gcc\bin\%OBJCOPY% (
-echo %WORKROOT%tools\gcc\bin\%OBJCOPY% -I %LDLINKFMT% -S -R ".eh_frame" -R ".comment" -O binary %WORKROOT%build\kernel.elf %WORKROOT%build\carbon.bin
+echo    OBJCOPY kernel.elf carbon.bin
 %WORKROOT%tools\gcc\bin\%OBJCOPY% -I %LDLINKFMT% -S -R ".eh_frame" -R ".comment" -O binary %WORKROOT%build\kernel.elf %WORKROOT%build\carbon.bin
 
 if not exist %WORKROOT%build\carbon.bin (
