@@ -12,10 +12,6 @@ EOS (all capital letters) stands for Eos Operating System. You can either read t
 
 EOS is an operating system that is free software—that means, it respects users' freedom. EOS contains some useful software (which is also free software), either written by us, or released by third parties.
 
-### Our Purpose
-
-Our purpose is to let everybody use computers easily, comfortably and freely by developing a powerful, user-friendly and open source operating system.
-
 ### License
 
 EOS is released under the terms of GNU General Public License version 3. See COPYING for more details.
@@ -27,6 +23,8 @@ EOS is designed to be compiled under Windows (but I'll appreciate a lot if you w
 To avoid bringing something not nice to the source code, you have to create a folder to put the source code folder into it and rename the source code folder as src. You have to create a folder by the source code folder called "tools", then put [Netwide Assembler (NASM)](https://nasm.us/) into tools/nasm, 
 
 GCC into tools/gcc ( **GCC must be able to create ELF file under Windows.** You can find an introduction about how to compile one [here: https://wiki.osdev.org/GCC_Cross-Compiler](https://wiki.osdev.org/GCC_Cross-Compiler)) (You can use the following configuration before compiling gcc: ../configure --prefix=/home/opt --target=x86_64-pc-linux --build=x86_64-pc-linux --host=x86_64-w64-mingw32 --disable-nls --enable-languages=c,c++ --without-headers) 
+
+(Theoretically you can just use mingw32-w64, but I haven't test that yet)
 
 and edimg.exe into tools/edimg (you can find it in tools/edimg in this repository). 
 
