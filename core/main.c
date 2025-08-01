@@ -62,36 +62,35 @@ int Start_Kernel(kernelconfig *config)
     init_gmd();
 
     /* initialize memory block bitmap */
-    gmd.block_bitmap = (addrtype *)mem_1k_align(gmd.eoc);
+    gmd.memory.block_bitmap = (addrtype *)mem_1k_align(gmd.eoc);
     memblk_get_length(osconf.memory);
-    gmd.bitmap_len_byte = mem_bit_size(gmd.bitmap_length);
+    gmd.memory.bitmap_len_byte = mem_bit_size(gmd.memory.bitmap_length);
 
-    gmd.heap = (addrtype *)mem_1k_align(gmd.block_bitmap + gmd.bitmap_len_byte);
+    gmd.heap = mem_1k_align(gmd.memory.block_bitmap + gmd.memory.bitmap_len_byte);
 
-    memset(gmd.block_bitmap,0x00,gmd.bitmap_len_byte);		/* clear all the bitmap first */ 
+    memset(gmd.memory.block_bitmap,0x00,gmd.memory.bitmap_len_byte);		/* clear all the bitmap first */ 
 
     /* initialize memblk */
-    gmd.blocks = (memblk *)gmd.heap;
-    gmd.blkstructsize = mem_align(gmd.bitmap_length * sizeof(memblk),sizeof(uint64_t));
+    gmd.memory.blocks = (memblk *)gmd.heap;
+    gmd.memory.blkstructsize = mem_align(gmd.memory.bitmap_length * sizeof(memblk),sizeof(uint64_t));
 
-    gmd.heap += (addrtype)gmd.blkstructsize;
+    gmd.heap += gmd.memory.blkstructsize;
 
-    memset(gmd.blocks,0x00,gmd.blkstructsize); /* clear block struct first */
+    memset(gmd.memory.blocks,0x00,gmd.memory.blkstructsize); /* clear block struct first */
 
     /* super init then... */
     memblk_init(osconf.memory);
-    for(uint32_t i = 0;i < gmd.bitmap_length;i++)
-    {
 
-        gmd.blocks[i].fragments = (memfragment *)simple_malloc(mem_align(sizeof(memfragment),sizeof(uint64_t)));
-        gmd.blocks[i].fragments->attributes = 0;
-        gmd.blocks[i].fragments->parent = gmd.blocks;
-        
-    }
-    print(WHITE,BLACK,"memblk bitmap length:%d\n",gmd.bitmap_length);
-
-    print(WHITE,BLACK,"memblk bitmap:%0*lb\n",gmd.bitmap_length,*gmd.block_bitmap);
+    print(WHITE,BLACK,"memblk bitmap length:%d\n",gmd.memory.bitmap_length);
+    print(WHITE,BLACK,"memblk bitmap:%0*lb\n",gmd.memory.bitmap_length,*gmd.memory.block_bitmap);
     print(WHITE,BLACK,"heap top address: %#lx\n",gmd.heap);
+
+    memfragment *test = alloc_memblk(2, fragment_set_attribute(FRAGMENT_TYPE_MEMBLK_SPANNED, FRAGMENT_LEVEL_CORE, FRAGMENT_VISIBILITY_PRIVATE, 0));
+    print(WHITE,BLACK,"memblk bitmap length:%d\n",gmd.memory.bitmap_length);
+    print(WHITE,BLACK,"memblk bitmap:%0*lb\n",gmd.memory.bitmap_length,*gmd.memory.block_bitmap);
+    print(WHITE,BLACK,"heap top address: %#lx\n",gmd.heap);
+
+    print (WHITE, BLACK, "%d, %d, %#lx", test->parent->fragments->data.len, test->len, test->parent->address);
     //  load and start the "real" kernel
     
 

@@ -36,68 +36,8 @@ void io_nop();
 void io_mfence();
 #endif
 
-/* something about list processing... */
 #include "global.h"
 
-struct List
-{
-	struct List * prev;
-	struct List * next;
-};
-
-inline void list_init(struct List * list)
-{
-	list->prev = list;
-	list->next = list;
-}
-
-inline void list_append(struct List * entry,struct List * new)	////add to entry behind
-{
-	new->next = entry->next;
-	new->prev = entry;
-	new->next->prev = new;
-	entry->next = new;
-}
-
-inline void list_insert_to_head(struct List * entry,struct List * new)
-{
-	new->next = entry;
-	entry->prev->next = new;
-	new->prev = entry->prev;
-	entry->prev = new;
-}
-
-inline void list_del(struct List * entry)
-{
-	entry->next->prev = entry->prev;
-	entry->prev->next = entry->next;
-}
-
-inline long is_list_empty(struct List * entry)
-{
-	if(entry == entry->next && entry->prev == entry)
-		return 1;
-	else
-		return 0;
-}
-
-inline struct List * list_prev(struct List * entry)
-{
-	if(entry->prev != NULL)
-		return entry->prev;
-	else
-		return NULL;
-}
-
-inline struct List * list_next(struct List * entry)
-{
-	if(entry->next != NULL)
-		return entry->next;
-	else
-		return NULL;
-}
-
-/* over */
 /* something about string processing... */
 
 
@@ -332,6 +272,41 @@ __asm__ __volatile__("cld;rep;insw;mfence;"::"d"(port),"D"(buffer),"c"(nr):"memo
 __asm__ __volatile__("cld;rep;outsw;mfence;"::"d"(port),"S"(buffer),"c"(nr):"memory")
 
 #endif
+
+
+
+static inline uint64_t ctzll(uint64_t x)
+{
+#ifdef x86_64
+	return __builtin_ctzll(x);
+#else
+	// quick check zero
+	if (x == 0) return 64;
+
+	// get LSB
+	const uint64_t lsb = (uint64_t)(x & -(int64_t)x);
+
+	const uint64_t debruijn64 = (uint64_t)(0x03F79D71B4CB0A89); // 0000001111110111100111010111000110110100110010110000101010001001 (64 digits) // de bruijn series
+
+	// de bruijn table without branches
+	static const uint8_t debruijn_table[64] = {
+		0,  1, 48,  2, 57, 49, 28,  3,
+	   61, 58, 50, 42, 38, 29, 17,  4,
+	   62, 55, 59, 36, 53, 51, 43, 22,
+	   45, 39, 33, 30, 24, 18, 12,  5,
+	   63, 47, 56, 27, 60, 41, 37, 16,
+	   54, 35, 52, 21, 44, 32, 23, 11,
+	   46, 26, 40, 15, 34, 20, 31, 10,
+	   25, 14, 19,  9, 13,  8,  7,  6
+	};
+
+	// calculate de bruijn index
+	uint64_t idx = (lsb * debruijn64) >> 58;
+
+	// combine results
+	return (debruijn_table[idx]);
+#endif
+}
 
 
 

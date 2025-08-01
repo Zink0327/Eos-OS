@@ -53,22 +53,22 @@ typedef struct __memblk memconfig;
 
 /* memblk gmd struct initialize. Differ from the memconfig's struct */
 
-#define memblk_get_length(src) gmd.bitmap_length = src.ramcounts;
+#define memblk_get_length(src) gmd.memory.bitmap_length = src.ramcounts;
 
 #define memblk_init(src)   do{                                                       \
-    for (uint32_t i = 0,j = 0,k = 0; j < src.counts; j++)                            \
+    for (uint32_t i = 0,j = 0,k = 0; j < src.counts; ++j)                            \
     {                                                                                \
         if (src.blocks[j].type == 1)                                                 \
         {                                                                            \
-            gmd.blocksize = src.blocks[j].size;                                      \
+            gmd.memory.blocksize = src.blocks[j].size;                                      \
             uint32_t l = src.blocks[j].len;                                          \
-            for(k = 0;k < l;k++, i++)                                                \
+            for(k = 0;k < l;++k, ++i)                                                \
             {                                                                        \
-                gmd.blocks[i].address = src.blocks[j].addr + 1024 * src.blocks[j].size * k;    \
-                gmd.blocks[i].type = 1;                                              \
-                gmd.blocks[i].fragments = NULL;                                      \
-                gmd.blocks[i].fragcount = 0;                                         \
-                if (__CORE_LINEAR_ADDR(gmd.blocks[i].address) < PAGE_2M_ALIGN(gmd.heap))       \
+                gmd.memory.blocks[i].address = (addrtype *)__CORE_LINEAR_ADDR(src.blocks[j].addr + 1024 * src.blocks[j].size * k);\
+                gmd.memory.blocks[i].type = 1;                                              \
+                gmd.memory.blocks[i].fragments = NULL;                                      \
+                gmd.memory.blocks[i].fragcount = 0;                                         \
+                if ((addrtype)(gmd.memory.blocks[i].address) < (addrtype)PAGE_2M_ALIGN(gmd.heap))       \
                 {                                                                    \
                     mem_bitmap_set(i)                                                \
                 }                                                                    \

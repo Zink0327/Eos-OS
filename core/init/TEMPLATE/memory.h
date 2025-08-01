@@ -45,19 +45,19 @@ typedef struct __memblk memconfig;
 
 /* memblk gmd struct initialize. Differ fron the memconfig's struct */
 #define memblk_init(src) \
-    gmd.bitmap_length = src.ramcounts; \
+    gmd.memory.bitmap_length = src.ramcounts; \
     for (uint32_t i = 0,j = 0,k = 0; j < src.counts; j++) \
     { \
         if (src.blocks[j].type == 1) \
         { \
-            gmd.blocksize = src.blocks[j].size; \
+            gmd.memory.blocksize = src.blocks[j].size; \
             uint32_t l = src.blocks[j].len; \
             while(k < l) \
             { \
-                gmd.blocks[i].address = src.blocks[j].addr + src.blocks[j].size * k; \
-                gmd.blocks[i].type = 1; \
-                gmd.blocks[i].fragments = NULL; \
-                gmd.blocks[i++].fragcount = 0; \
+                gmd.memory.blocks[i].address = src.blocks[j].addr + src.blocks[j].size * k; \
+                gmd.memory.blocks[i].type = 1; \
+                gmd.memory.blocks[i].fragments = NULL; \
+                gmd.memory.blocks[i++].fragcount = 0; \
             } \
         } \
         k = 0; \

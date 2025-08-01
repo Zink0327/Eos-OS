@@ -52,7 +52,7 @@ char* itoa_k(char* str, long num, int size, int base, int precision, int type)
 	if (type & LEFT) type &= ~ZEROPAD;
 
 	/* base can't be lower than 2 or higher than 36. If so, return. */
-	if (base < 2 || base > 36)
+	if ((signed int) (((unsigned int) base - 2) | (36 - (unsigned int) base)) < 0) // base in [2,36]
 		return NULL;
 
 	c = (type & ZEROPAD) ? '0' : ' ';
@@ -126,7 +126,7 @@ char* itoa_k(char* str, long num, int size, int base, int precision, int type)
 	{
 		tmp_len = i;
 	}
-	if (offset < tmp_len && offset >= 0)
+	if (((unsigned int)offset) < tmp_len)  // offset in [0,tmp_len)
 	{
 		i += offset - tmp_len;
 		offset -= tmp_len;
@@ -331,7 +331,7 @@ int vsprintf_k(char* buf, const char* fmt, va_list args)
 			s = va_arg(args, char*);
 			if (!s)
 			{
-				s = '\0';
+				break;   //nothing as input, nothing as output.
 			}
 			len = strlen(s);
 			if (precision < 0)       
